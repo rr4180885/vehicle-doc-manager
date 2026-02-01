@@ -129,7 +129,10 @@ export function useUpdateVehicle() {
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: Partial<InsertVehicle> }) => updateVehicle(id, data),
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      // Invalidate the specific vehicle query to refresh the details page
+      queryClient.invalidateQueries({ queryKey: [`/api/vehicles/${variables.id}`] });
+      // Also invalidate the vehicles list
       queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
     },
   });
