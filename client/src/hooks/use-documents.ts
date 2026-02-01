@@ -35,6 +35,8 @@ export function useCreateDocument() {
     onSuccess: (data) => {
       // Invalidate the specific vehicle the document belongs to
       queryClient.invalidateQueries({ queryKey: [api.vehicles.get.path, data.vehicleId] });
+      // Also invalidate vehicles list for dashboard alerts
+      queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
     },
   });
 }
@@ -62,6 +64,8 @@ export function useUpdateDocument() {
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: [api.vehicles.get.path, variables.vehicleId] });
+      // Also invalidate vehicles list for dashboard alerts
+      queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
     },
   });
 }
@@ -82,6 +86,8 @@ export function useDeleteDocument() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [api.vehicles.get.path, variables.vehicleId] });
+      // Also invalidate vehicles list for dashboard alerts
+      queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
     },
   });
 }
