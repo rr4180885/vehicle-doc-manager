@@ -8,10 +8,16 @@
     {
       "source": "/api/(.*)",
       "destination": "/api"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api"
     },
     {
-      "source": "/(.*)",
-      "destination": "/api"
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }

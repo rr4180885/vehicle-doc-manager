@@ -92,7 +92,17 @@ After first deployment:
 - Files are publicly accessible (for viewing documents)
 - Persistent across deployments
 
-## Troubleshooting
+## Common Issues & Solutions
+
+### Blank Screen on Vercel
+
+**Problem**: Website shows blank screen after deployment
+
+**Solution**: This was caused by incorrect routing in `vercel.json`. The fix:
+- Ensure `vercel.json` has proper `routes` configuration
+- API calls should route to `/api`
+- All other requests should serve `index.html` for React routing
+- The corrected `vercel.json` is already in place
 
 ### Upload Fails on Vercel
 
