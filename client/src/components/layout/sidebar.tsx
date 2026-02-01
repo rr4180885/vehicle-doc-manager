@@ -17,7 +17,7 @@ export function Sidebar() {
     <div className="flex h-full min-h-screen w-64 flex-col bg-card border-r border-border">
       <div className="flex h-16 items-center px-6 border-b border-border">
         <Car className="h-6 w-6 text-primary mr-2" />
-        <span className="font-display font-bold text-xl tracking-tight">FleetKeep</span>
+        <span className="font-display font-bold text-xl tracking-tight">VehicleLedger</span>
       </div>
       
       <div className="flex flex-1 flex-col gap-y-4 overflow-y-auto px-4 py-6">
@@ -52,11 +52,11 @@ export function Sidebar() {
           <div className="px-2 mb-4">
             <div className="flex items-center gap-x-3 rounded-lg p-2 bg-muted/50">
               <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-                {user?.firstName?.[0] || user?.email?.[0] || 'U'}
+                {user?.username?.[0]?.toUpperCase() || 'U'}
               </div>
               <div className="overflow-hidden">
-                <p className="text-sm font-semibold truncate">{user?.firstName || 'User'}</p>
-                <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                <p className="text-sm font-semibold truncate">{user?.username || 'User'}</p>
+                <p className="text-xs text-muted-foreground truncate">ID: {user?.id}</p>
               </div>
             </div>
           </div>

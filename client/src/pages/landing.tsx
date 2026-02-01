@@ -44,7 +44,7 @@ export default function Landing() {
         {/* Header */}
         <div className="flex items-center justify-center mb-8 gap-3">
           <Car className="h-8 w-8 text-blue-600" />
-          <h1 className="text-3xl font-bold text-slate-900">Vehicle Document Manager</h1>
+          <h1 className="text-3xl font-bold text-slate-900">VehicleLedger</h1>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
@@ -90,9 +90,6 @@ export default function Landing() {
                   >
                     {isLoggingIn ? "Signing in..." : "Sign In"}
                   </Button>
-                  <p className="text-xs text-muted-foreground text-center mt-4">
-                    Default credentials: kisun01 / Kisun@7257
-                  </p>
                 </form>
               </CardContent>
             </Card>
