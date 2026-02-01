@@ -4,7 +4,7 @@ import {
   type Document, type InsertDocument, type UpdateDocumentRequest,
   type VehicleWithDocuments, type CreateVehicleWithDocuments
 } from "@shared/schema";
-import { db } from "./db";
+import { db } from "./db.js";
 import { eq, ilike, and, desc } from "drizzle-orm";
 
 export interface IStorage {

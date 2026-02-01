@@ -1,12 +1,12 @@
 import type { Express } from "express";
 import type { Server } from "http";
-import { storage } from "./storage";
+import { storage } from "./storage.js";
 import { api } from "@shared/routes";
 import { z } from "zod";
-import { setupAuth, registerAuthRoutes, isAuthenticated } from "./auth";
-import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
+import { setupAuth, registerAuthRoutes, isAuthenticated } from "./auth.js";
+import { registerObjectStorageRoutes } from "./replit_integrations/object_storage/index.js";
 import { createVehicleWithDocumentsSchema } from "@shared/schema";
-import { upload, getFileUrl, uploadToVercelBlob, isUsingVercelBlob } from "./upload";
+import { upload, getFileUrl, uploadToVercelBlob, isUsingVercelBlob } from "./upload.js";
 import express from "express";
 import path from "path";
 

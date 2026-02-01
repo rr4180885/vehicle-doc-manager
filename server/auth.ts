@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
-import { pool } from "./db";
+import { pool } from "./db.js";
 
 const PgSession = connectPgSimple(session);
 
