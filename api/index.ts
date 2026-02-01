@@ -19,6 +19,7 @@ async function getApp() {
   isInitializing = true;
   initPromise = (async () => {
     try {
+      console.log("Initializing Express app for Vercel...");
       const newApp = express();
       const httpServer = createServer(newApp);
 
@@ -33,7 +34,9 @@ async function getApp() {
       newApp.use(express.urlencoded({ extended: false }));
 
       // Register all routes
+      console.log("Registering routes...");
       await registerRoutes(httpServer, newApp);
+      console.log("Routes registered successfully");
 
       app = newApp;
       isInitializing = false;
@@ -42,6 +45,7 @@ async function getApp() {
       isInitializing = false;
       initPromise = null;
       console.error("Failed to initialize app:", error);
+      console.error("Error stack:", error instanceof Error ? error.stack : String(error));
       throw error;
     }
   })();
@@ -51,6 +55,8 @@ async function getApp() {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    
     const app = await getApp();
     
     // Convert Vercel request to Express request
@@ -58,10 +64,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       app(req as any, res as any, (err: any) => {
         if (err) {
           console.error("Express error:", err);
+          console.error("Error stack:", err.stack);
           if (!res.headersSent) {
             res.status(500).json({ 
               message: "Internal server error",
-              error: process.env.NODE_ENV === "development" ? err.message : undefined
+              error: process.env.NODE_ENV === "development" ? err.message : "Please check Vercel function logs",
+              timestamp: new Date().toISOString()
             });
           }
           reject(err);
@@ -72,10 +80,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   } catch (error: any) {
     console.error("Handler error:", error);
+    console.error("Error stack:", error instanceof Error ? error.stack : String(error));
     if (!res.headersSent) {
       res.status(500).json({ 
         message: "Failed to initialize server",
-        error: process.env.NODE_ENV === "development" ? error.message : undefined
+        error: error.message || String(error),
+        timestamp: new Date().toISOString()
       });
     }
   }
