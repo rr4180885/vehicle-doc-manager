@@ -77,6 +77,8 @@ export function useAuth() {
     mutationFn: logoutUser,
     onSuccess: () => {
       queryClient.setQueryData(["/api/auth/user"], null);
+      // Redirect to landing page after logout
+      window.location.href = "/";
     },
   });
 
