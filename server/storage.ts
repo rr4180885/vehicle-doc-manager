@@ -3,7 +3,7 @@ import {
   type Vehicle, type InsertVehicle, type UpdateVehicleRequest,
   type Document, type InsertDocument, type UpdateDocumentRequest,
   type VehicleWithDocuments, type CreateVehicleWithDocuments
-} from "@shared/schema";
+} from "../shared/schema.js";
 import { db } from "./db.js";
 import { eq, ilike, and, desc } from "drizzle-orm";
 
