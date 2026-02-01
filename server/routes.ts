@@ -58,11 +58,34 @@ export async function registerRoutes(
     }
   });
 
+  // Debug endpoint to check all vehicles (TEMPORARY - remove in production)
+  app.get("/api/debug/vehicles", isAuthenticated, async (req, res) => {
+    try {
+      const userId = req.session.user!.id;
+      console.log("Current logged in userId:", userId);
+      
+      // Get vehicles for current user
+      const userVehicles = await storage.getVehicles(userId);
+      
+      return res.json({
+        currentUserId: userId,
+        vehicleCount: userVehicles.length,
+        vehicles: userVehicles,
+        message: `Found ${userVehicles.length} vehicles for userId: ${userId}`
+      });
+    } catch (error) {
+      console.error("Debug error:", error);
+      return res.status(500).json({ error: String(error) });
+    }
+  });
+
   // Vehicle Routes
   app.get(api.vehicles.list.path, isAuthenticated, async (req, res) => {
     const userId = req.session.user!.id;
+    console.log("Fetching vehicles for userId:", userId);
     const search = req.query.search as string | undefined;
     const vehicles = await storage.getVehicles(userId, search);
+    console.log("Found vehicles:", vehicles.length);
     res.json(vehicles);
   });
 
