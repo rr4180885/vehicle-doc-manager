@@ -22,51 +22,43 @@ declare module "express-session" {
 }
 
 export function setupAuth(app: any) {
-  // For Vercel serverless, we need to handle sessions differently
+  // Trust proxy for Vercel
+  app.set('trust proxy', 1);
+  
+  // Session configuration
   const sessionConfig: any = {
     secret: process.env.SESSION_SECRET || "vehicle-doc-manager-secret-key-change-in-production",
-    resave: false,
+    resave: true, // Changed to true for serverless
     saveUninitialized: false,
+    rolling: true, // Refresh cookie on each request
     cookie: {
-      secure: process.env.NODE_ENV === "production",
+      secure: true, // Always use secure in production
       httpOnly: true,
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Required for cross-origin in production
+      sameSite: "lax", // Changed from "none" to "lax" for better compatibility
+      path: '/',
     },
   };
 
-  // Try to use PostgreSQL session store if available and not on Vercel
-  if (pool && process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('your-database-url') && !process.env.VERCEL) {
-    try {
-      sessionConfig.store = new PgSession({
-        pool: pool,
-        tableName: "sessions",
-        createTableIfMissing: true, 
-        errorLog: (err) => {
-          console.error("Session store error:", err);
-        },
-      });
-      console.log("Using PostgreSQL session store");
-    } catch (error) {
-      console.warn("Failed to initialize PG session store, using memory store:", error);
-    }
-  } else if (pool && process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('your-database-url')) {
-    // On Vercel with database - try PG sessions despite serverless limitations
+  // Always try to use PostgreSQL session store if database is available
+  if (pool && process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('your-database-url')) {
     try {
       sessionConfig.store = new PgSession({
         pool: pool,
         tableName: "sessions",
         createTableIfMissing: true,
+        pruneSessionInterval: 60 * 15, // Prune every 15 minutes
         errorLog: (err) => {
           console.error("Session store error:", err);
         },
       });
-      console.log("Using PostgreSQL session store for Vercel");
+      console.log("✓ Using PostgreSQL session store");
     } catch (error) {
-      console.warn("Failed to initialize PG session store:", error);
+      console.error("✗ Failed to initialize PG session store:", error);
+      console.log("Falling back to memory store (sessions will not persist!)");
     }
   } else {
-    console.log("Using memory session store (limited in serverless)");
+    console.warn("⚠ No database configured - using memory store (sessions will NOT persist in serverless!)");
   }
 
   app.use(session(sessionConfig));
