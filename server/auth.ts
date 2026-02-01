@@ -34,8 +34,8 @@ export function setupAuth(app: any) {
     },
   };
 
-  // Only use PostgreSQL session store if DATABASE_URL is properly configured
-  if (pool && process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('your-database-url')) {
+  // Use memory sessions for Vercel (serverless doesn't support persistent PG sessions)
+  if (pool && process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('your-database-url') && !process.env.VERCEL) {
     try {
       sessionConfig.store = new PgSession({
         pool: pool,
@@ -50,7 +50,7 @@ export function setupAuth(app: any) {
       console.warn("Failed to initialize PG session store, using memory store:", error);
     }
   } else {
-    console.log("Using memory session store (DATABASE_URL not configured or pool not available)");
+    console.log("Using memory session store (for Vercel serverless)");
   }
 
   app.use(session(sessionConfig));
