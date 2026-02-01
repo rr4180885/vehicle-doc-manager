@@ -134,12 +134,38 @@ export function VehicleWithDocumentsForm({ onSubmit, isSubmitting, error }: Vehi
   };
 
   const handleFormSubmit = async (data: VehicleWithDocumentsFormData) => {
-    // Here you would typically upload files to your storage
-    // For now, we'll create file URLs from the file names
-    const documentsWithFiles = data.documents?.map(doc => ({
-      ...doc,
-      fileUrl: documentFiles[doc.type]?.name || doc.fileUrl,
-    }));
+    // Upload files to storage and get URLs
+    const documentsWithFiles = await Promise.all(
+      (data.documents || []).map(async (doc) => {
+        const file = documentFiles[doc.type];
+        
+        if (file) {
+          // Upload file to server
+          const formData = new FormData();
+          formData.append('file', file);
+          
+          try {
+            const response = await fetch('/api/upload', {
+              method: 'POST',
+              body: formData,
+              credentials: 'include',
+            });
+            
+            if (response.ok) {
+              const result = await response.json();
+              return {
+                ...doc,
+                fileUrl: result.fileUrl,
+              };
+            }
+          } catch (error) {
+            console.error('Error uploading file:', error);
+          }
+        }
+        
+        return doc;
+      })
+    );
 
     await onSubmit({
       ...data,
