@@ -31,10 +31,11 @@ export function setupAuth(app: any) {
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax", // Required for cross-origin in production
     },
   };
 
-  // Use memory sessions for Vercel (serverless doesn't support persistent PG sessions)
+  // Try to use PostgreSQL session store if available and not on Vercel
   if (pool && process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('your-database-url') && !process.env.VERCEL) {
     try {
       sessionConfig.store = new PgSession({
@@ -49,8 +50,23 @@ export function setupAuth(app: any) {
     } catch (error) {
       console.warn("Failed to initialize PG session store, using memory store:", error);
     }
+  } else if (pool && process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('your-database-url')) {
+    // On Vercel with database - try PG sessions despite serverless limitations
+    try {
+      sessionConfig.store = new PgSession({
+        pool: pool,
+        tableName: "sessions",
+        createTableIfMissing: true,
+        errorLog: (err) => {
+          console.error("Session store error:", err);
+        },
+      });
+      console.log("Using PostgreSQL session store for Vercel");
+    } catch (error) {
+      console.warn("Failed to initialize PG session store:", error);
+    }
   } else {
-    console.log("Using memory session store (for Vercel serverless)");
+    console.log("Using memory session store (limited in serverless)");
   }
 
   app.use(session(sessionConfig));
