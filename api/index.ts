@@ -5,40 +5,78 @@ import { registerRoutes } from "../server/routes";
 import { createServer } from "http";
 
 let app: Express | null = null;
+let isInitializing = false;
+let initPromise: Promise<Express> | null = null;
 
 async function getApp() {
   if (app) return app;
+  
+  // Prevent multiple simultaneous initializations
+  if (isInitializing && initPromise) {
+    return initPromise;
+  }
 
-  app = express();
-  const httpServer = createServer(app);
+  isInitializing = true;
+  initPromise = (async () => {
+    try {
+      const newApp = express();
+      const httpServer = createServer(newApp);
 
-  // Middleware
-  app.use(
-    express.json({
-      verify: (req: any, _res, buf) => {
-        req.rawBody = buf;
-      },
-    })
-  );
-  app.use(express.urlencoded({ extended: false }));
+      // Middleware
+      newApp.use(
+        express.json({
+          verify: (req: any, _res, buf) => {
+            req.rawBody = buf;
+          },
+        })
+      );
+      newApp.use(express.urlencoded({ extended: false }));
 
-  // Register all routes
-  await registerRoutes(httpServer, app);
+      // Register all routes
+      await registerRoutes(httpServer, newApp);
 
-  return app;
+      app = newApp;
+      isInitializing = false;
+      return newApp;
+    } catch (error) {
+      isInitializing = false;
+      initPromise = null;
+      console.error("Failed to initialize app:", error);
+      throw error;
+    }
+  })();
+
+  return initPromise;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const app = await getApp();
-  
-  // Convert Vercel request to Express request
-  return new Promise((resolve, reject) => {
-    app(req as any, res as any, (err: any) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(undefined);
-      }
+  try {
+    const app = await getApp();
+    
+    // Convert Vercel request to Express request
+    return new Promise((resolve, reject) => {
+      app(req as any, res as any, (err: any) => {
+        if (err) {
+          console.error("Express error:", err);
+          if (!res.headersSent) {
+            res.status(500).json({ 
+              message: "Internal server error",
+              error: process.env.NODE_ENV === "development" ? err.message : undefined
+            });
+          }
+          reject(err);
+        } else {
+          resolve(undefined);
+        }
+      });
     });
-  });
+  } catch (error: any) {
+    console.error("Handler error:", error);
+    if (!res.headersSent) {
+      res.status(500).json({ 
+        message: "Failed to initialize server",
+        error: process.env.NODE_ENV === "development" ? error.message : undefined
+      });
+    }
+  }
 }

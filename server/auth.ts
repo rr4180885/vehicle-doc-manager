@@ -22,24 +22,37 @@ declare module "express-session" {
 }
 
 export function setupAuth(app: any) {
-  app.use(
-    session({
-      store: new PgSession({
+  // For Vercel serverless, we need to handle sessions differently
+  const sessionConfig: any = {
+    secret: process.env.SESSION_SECRET || "vehicle-doc-manager-secret-key-change-in-production",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    },
+  };
+
+  // Only use PostgreSQL session store if DATABASE_URL is properly configured
+  if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('your-database-url')) {
+    try {
+      sessionConfig.store = new PgSession({
         pool: pool,
         tableName: "sessions",
-        createTableIfMissing: false, // Don't try to create if it exists
-        errorLog: () => {}, // Suppress errors about existing tables
-      }),
-      secret: process.env.SESSION_SECRET || "vehicle-doc-manager-secret-key-change-in-production",
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        secure: process.env.NODE_ENV === "production",
-        httpOnly: true,
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      },
-    })
-  );
+        createTableIfMissing: true, 
+        errorLog: (err) => {
+          console.error("Session store error:", err);
+        },
+      });
+    } catch (error) {
+      console.warn("Failed to initialize PG session store, using memory store:", error);
+    }
+  } else {
+    console.log("Using memory session store (DATABASE_URL not configured)");
+  }
+
+  app.use(session(sessionConfig));
 }
 
 export function isAuthenticated(req: Request, res: Response, next: NextFunction) {

@@ -94,15 +94,38 @@ After first deployment:
 
 ## Common Issues & Solutions
 
-### Blank Screen on Vercel
+### Blank Screen on Vercel (FIXED)
 
 **Problem**: Website shows blank screen after deployment
 
-**Solution**: This was caused by incorrect routing in `vercel.json`. The fix:
-- Ensure `vercel.json` has proper `routes` configuration
-- API calls should route to `/api`
-- All other requests should serve `index.html` for React routing
-- The corrected `vercel.json` is already in place
+**Root Cause**: Incorrect routing in `vercel.json` was sending all requests (including homepage) to the API instead of serving the React frontend.
+
+**Solution Applied**:
+1. Updated `vercel.json` to properly route requests
+2. Created `/api/index.ts` serverless function for Vercel
+3. Configured proper rewrites for API endpoints
+
+The application now correctly:
+- Serves React app for all non-API routes
+- Routes `/api/*` requests to the serverless function
+- Supports Vercel's serverless architecture
+
+### API 404 Errors (FIXED)
+
+**Problem**: `GET /api/auth/user 404 (Not Found)` and other API errors
+
+**Root Cause**: Vercel uses serverless functions, not a persistent Node.js server. The original setup tried to run Express as a traditional server.
+
+**Solution Applied**:
+1. Created `api/index.ts` - Vercel serverless function entry point
+2. Configured function to initialize Express app and handle all API routes
+3. Added `@vercel/node` package for TypeScript support
+4. Updated `vercel.json` with functions configuration
+
+**Files Added/Modified**:
+- `api/index.ts` - New serverless function handler
+- `vercel.json` - Updated routing and functions config
+- `package.json` - Added `@vercel/node` dependency
 
 ### Upload Fails on Vercel
 
