@@ -112,24 +112,26 @@ export function DocumentForm({ vehicleId, onSubmit, isSubmitting, defaultValues 
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="expiryDate"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Expiry Date</FormLabel>
-              <FormControl>
-                <DatePicker
-                  value={field.value}
-                  onChange={field.onChange}
-                  placeholder="Select expiry date"
-                />
-              </FormControl>
-              <FormDescription>For expiration alerts</FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        {form.watch("type") !== "owner_book" && (
+          <FormField
+            control={form.control}
+            name="expiryDate"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Expiry Date</FormLabel>
+                <FormControl>
+                  <DatePicker
+                    value={field.value || undefined}
+                    onChange={field.onChange}
+                    placeholder="Select expiry date"
+                  />
+                </FormControl>
+                <FormDescription>For expiration alerts</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
 
         <div className="space-y-2">
           <FormLabel>Document File</FormLabel>
