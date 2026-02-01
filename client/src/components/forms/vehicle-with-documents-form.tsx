@@ -166,16 +166,25 @@ export function VehicleWithDocumentsForm({ onSubmit, isSubmitting, error }: Vehi
             if (response.ok) {
               const result = await response.json();
               return {
-                ...doc,
+                type: doc.type,
+                expiryDate: doc.expiryDate || undefined,
                 fileUrl: result.fileUrl,
+                notes: doc.notes || undefined,
               };
             }
           } catch (error) {
             console.error('Error uploading file:', error);
+            throw new Error(`Failed to upload ${doc.type} file`);
           }
         }
         
-        return doc;
+        // For documents without files (not owner_book), send with expiry date only
+        return {
+          type: doc.type,
+          expiryDate: doc.expiryDate || undefined,
+          fileUrl: undefined,
+          notes: doc.notes || undefined,
+        };
       })
     );
 

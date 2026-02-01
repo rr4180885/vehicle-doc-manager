@@ -30,8 +30,8 @@ export const documents = pgTable("documents", {
   id: serial("id").primaryKey(),
   vehicleId: integer("vehicle_id").notNull().references(() => vehicles.id),
   type: documentTypeEnum("type").notNull(),
-  expiryDate: date("expiry_date", { mode: "string" }).notNull(),
-  fileUrl: text("file_url").notNull(),
+  expiryDate: date("expiry_date", { mode: "string" }), // Optional - not required for owner_book
+  fileUrl: text("file_url"), // Optional - not required for all doc types
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
