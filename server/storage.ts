@@ -66,8 +66,34 @@ export class DatabaseStorage implements IStorage {
     return { ...vehicle[0], documents: docs };
   }
 
+  async checkRegistrationNumberExists(registrationNumber: string, excludeId?: number): Promise<boolean> {
+    const database = this.checkDb();
+    const query = database.select().from(vehicles).where(eq(vehicles.registrationNumber, registrationNumber));
+    
+    const existing = await query.limit(1);
+    
+    if (existing.length === 0) return false;
+    
+    // If excludeId is provided (for updates), check if it's a different vehicle
+    if (excludeId !== undefined) {
+      return existing[0].id !== excludeId;
+    }
+    
+    return true;
+  }
+
   async createVehicle(userId: string, vehicle: InsertVehicle): Promise<Vehicle> {
     const database = this.checkDb();
+    
+    // Check for duplicate registration number
+    const exists = await this.checkRegistrationNumberExists(vehicle.registrationNumber);
+    if (exists) {
+      const error: any = new Error("Registration number already exists");
+      error.code = "DUPLICATE_REGISTRATION";
+      error.field = "registrationNumber";
+      throw error;
+    }
+    
     const [newVehicle] = await database.insert(vehicles).values({ ...vehicle, userId }).returning();
     return newVehicle;
   }
@@ -75,6 +101,15 @@ export class DatabaseStorage implements IStorage {
   async createVehicleWithDocuments(userId: string, data: CreateVehicleWithDocuments): Promise<VehicleWithDocuments> {
     const database = this.checkDb();
     const { documents: docs, ...vehicleData } = data;
+    
+    // Check for duplicate registration number
+    const exists = await this.checkRegistrationNumberExists(vehicleData.registrationNumber);
+    if (exists) {
+      const error: any = new Error("Registration number already exists");
+      error.code = "DUPLICATE_REGISTRATION";
+      error.field = "registrationNumber";
+      throw error;
+    }
     
     // Create vehicle first
     const [newVehicle] = await database.insert(vehicles).values({ ...vehicleData, userId }).returning();

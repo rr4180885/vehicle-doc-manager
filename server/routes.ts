@@ -111,11 +111,17 @@ export async function registerRoutes(
       const input = createVehicleWithDocumentsSchema.parse(req.body);
       const vehicle = await storage.createVehicleWithDocuments(userId, input);
       res.status(201).json(vehicle);
-    } catch (err) {
+    } catch (err: any) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({
           message: err.errors[0].message,
           field: err.errors[0].path.join('.'),
+        });
+      }
+      if (err.code === 'DUPLICATE_REGISTRATION') {
+        return res.status(400).json({
+          message: err.message,
+          field: err.field,
         });
       }
       throw err;

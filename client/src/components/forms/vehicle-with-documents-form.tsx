@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -41,9 +41,10 @@ type VehicleWithDocumentsFormData = z.infer<typeof vehicleWithDocumentsSchema>;
 interface VehicleWithDocumentsFormProps {
   onSubmit: (data: any) => Promise<unknown>;
   isSubmitting: boolean;
+  error?: { field?: string; message: string } | null;
 }
 
-export function VehicleWithDocumentsForm({ onSubmit, isSubmitting }: VehicleWithDocumentsFormProps) {
+export function VehicleWithDocumentsForm({ onSubmit, isSubmitting, error }: VehicleWithDocumentsFormProps) {
   const [selectedDocTypes, setSelectedDocTypes] = useState<string[]>([]);
   const [documentFiles, setDocumentFiles] = useState<Record<string, File>>({});
 
@@ -56,6 +57,16 @@ export function VehicleWithDocumentsForm({ onSubmit, isSubmitting }: VehicleWith
       documents: [],
     },
   });
+
+  // Set field error when error prop changes
+  useEffect(() => {
+    if (error?.field) {
+      form.setError(error.field as any, {
+        type: "manual",
+        message: error.message,
+      });
+    }
+  }, [error, form]);
 
   const toggleDocumentType = (type: string) => {
     setSelectedDocTypes((prev) => {

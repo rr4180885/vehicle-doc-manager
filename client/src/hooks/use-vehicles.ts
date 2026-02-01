@@ -52,7 +52,9 @@ async function createVehicleWithDocuments(data: CreateVehicleWithDocuments): Pro
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.message || "Failed to create vehicle with documents");
+    const err: any = new Error(error.message || "Failed to create vehicle with documents");
+    err.field = error.field; // Pass the field name for highlighting
+    throw err;
   }
 
   return response.json();

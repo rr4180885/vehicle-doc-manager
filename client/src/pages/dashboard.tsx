@@ -21,18 +21,26 @@ export default function Dashboard() {
   const { mutateAsync: createVehicleWithDocs, isPending: isCreating } = useCreateVehicleWithDocuments();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [formError, setFormError] = useState<{ field?: string; message: string } | null>(null);
 
   const handleCreate = async (data: any) => {
     try {
+      setFormError(null); // Clear previous errors
       await createVehicleWithDocs(data);
       toast({ title: "Success", description: "Vehicle and documents added successfully" });
       setIsDialogOpen(false);
     } catch (error: any) {
+      const errorData = {
+        field: error.field,
+        message: error.message || "Failed to add vehicle"
+      };
+      setFormError(errorData);
       toast({ 
         title: "Error", 
         description: error.message || "Failed to add vehicle", 
         variant: "destructive" 
       });
+      // Don't close dialog so user can fix the error
     }
   };
 
@@ -115,7 +123,7 @@ export default function Dashboard() {
             <DialogHeader>
               <DialogTitle>Add New Vehicle with Documents</DialogTitle>
             </DialogHeader>
-            <VehicleWithDocumentsForm onSubmit={handleCreate} isSubmitting={isCreating} />
+            <VehicleWithDocumentsForm onSubmit={handleCreate} isSubmitting={isCreating} error={formError} />
           </DialogContent>
         </Dialog>
       </div>
