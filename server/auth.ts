@@ -35,7 +35,7 @@ export function setupAuth(app: any) {
   };
 
   // Only use PostgreSQL session store if DATABASE_URL is properly configured
-  if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('your-database-url')) {
+  if (pool && process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('your-database-url')) {
     try {
       sessionConfig.store = new PgSession({
         pool: pool,
@@ -45,11 +45,12 @@ export function setupAuth(app: any) {
           console.error("Session store error:", err);
         },
       });
+      console.log("Using PostgreSQL session store");
     } catch (error) {
       console.warn("Failed to initialize PG session store, using memory store:", error);
     }
   } else {
-    console.log("Using memory session store (DATABASE_URL not configured)");
+    console.log("Using memory session store (DATABASE_URL not configured or pool not available)");
   }
 
   app.use(session(sessionConfig));
