@@ -34,27 +34,44 @@ export class DatabaseStorage implements IStorage {
 
   async getVehicles(userId: string, search?: string): Promise<VehicleWithDocuments[]> {
     const database = this.checkDb();
-    let query = database.select().from(vehicles).where(eq(vehicles.userId, userId));
     
+    // Build where conditions
+    const conditions = [eq(vehicles.userId, userId)];
     if (search) {
-      query = database.select().from(vehicles).where(
-        and(
-          eq(vehicles.userId, userId),
-          ilike(vehicles.registrationNumber, `%${search}%`)
-        )
-      );
-    }
-
-    const vehiclesList = await query.orderBy(desc(vehicles.createdAt));
-    
-    // Fetch documents for each vehicle
-    const vehiclesWithDocs: VehicleWithDocuments[] = [];
-    for (const vehicle of vehiclesList) {
-      const docs = await database.select().from(documents).where(eq(documents.vehicleId, vehicle.id));
-      vehiclesWithDocs.push({ ...vehicle, documents: docs });
+      conditions.push(ilike(vehicles.registrationNumber, `%${search}%`));
     }
     
-    return vehiclesWithDocs;
+    // Fetch all vehicles matching criteria
+    const vehiclesList = await database
+      .select()
+      .from(vehicles)
+      .where(and(...conditions))
+      .orderBy(desc(vehicles.createdAt));
+    
+    if (vehiclesList.length === 0) {
+      return [];
+    }
+    
+    // Fetch ALL documents for these vehicles in ONE query (fixes N+1 problem)
+    // We fetch all documents and filter in-memory since Drizzle ORM's IN clause is complex
+    const vehicleIds = new Set(vehiclesList.map(v => v.id));
+    const allDocuments = await database.select().from(documents);
+    const relevantDocs = allDocuments.filter(doc => vehicleIds.has(doc.vehicleId));
+    
+    // Group documents by vehicleId in memory (fast)
+    const docsByVehicle = new Map<number, Document[]>();
+    for (const doc of relevantDocs) {
+      if (!docsByVehicle.has(doc.vehicleId)) {
+        docsByVehicle.set(doc.vehicleId, []);
+      }
+      docsByVehicle.get(doc.vehicleId)!.push(doc);
+    }
+    
+    // Combine vehicles with their documents (O(n) instead of O(n²))
+    return vehiclesList.map(vehicle => ({
+      ...vehicle,
+      documents: docsByVehicle.get(vehicle.id) || []
+    }));
   }
 
   async getVehicle(id: number): Promise<VehicleWithDocuments | undefined> {
