@@ -25,9 +25,6 @@ export function VehicleForm({
       registrationNumber: "",
       ownerName: "",
       ownerMobile: "",
-      vehicleClass: "",
-      make: "",
-      model: "",
     },
   });
 
@@ -71,50 +68,6 @@ export function VehicleForm({
                 <FormLabel>Mobile Number</FormLabel>
                 <FormControl>
                   <Input placeholder="9876543210" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <FormField
-            control={form.control}
-            name="make"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Make</FormLabel>
-                <FormControl>
-                  <Input placeholder="Toyota" {...field} value={field.value || ''} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="model"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Model</FormLabel>
-                <FormControl>
-                  <Input placeholder="Innova" {...field} value={field.value || ''} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="vehicleClass"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Class</FormLabel>
-                <FormControl>
-                  <Input placeholder="LMV / MCWG" {...field} value={field.value || ''} />
                 </FormControl>
                 <FormMessage />
               </FormItem>

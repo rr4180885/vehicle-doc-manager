@@ -46,7 +46,7 @@ export default function VehicleDetails() {
 
   const handleUpdate = async (data: any) => {
     try {
-      await updateVehicle({ id: vehicleId, ...data });
+      await updateVehicle({ id: vehicleId, data });
       toast({ title: "Updated", description: "Vehicle details updated" });
       setIsEditOpen(false);
     } catch (error) {
