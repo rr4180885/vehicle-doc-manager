@@ -34,7 +34,7 @@ export function useCreateDocument() {
     },
     onSuccess: (data) => {
       // Invalidate the specific vehicle the document belongs to
-      queryClient.invalidateQueries({ queryKey: [api.vehicles.get.path, data.vehicleId] });
+      queryClient.invalidateQueries({ queryKey: [`/api/vehicles/${data.vehicleId}`] });
       // Also invalidate vehicles list for dashboard alerts
       queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
     },
@@ -63,7 +63,8 @@ export function useUpdateDocument() {
       return parseWithLogging(api.documents.update.responses[200], responseData, "documents.update");
     },
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: [api.vehicles.get.path, variables.vehicleId] });
+      // Invalidate the specific vehicle the document belongs to
+      queryClient.invalidateQueries({ queryKey: [`/api/vehicles/${variables.vehicleId}`] });
       // Also invalidate vehicles list for dashboard alerts
       queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
     },
@@ -85,7 +86,8 @@ export function useDeleteDocument() {
       if (!res.ok) throw new Error("Failed to delete document");
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: [api.vehicles.get.path, variables.vehicleId] });
+      // Invalidate the specific vehicle the document belongs to
+      queryClient.invalidateQueries({ queryKey: [`/api/vehicles/${variables.vehicleId}`] });
       // Also invalidate vehicles list for dashboard alerts
       queryClient.invalidateQueries({ queryKey: ["/api/vehicles"] });
     },
