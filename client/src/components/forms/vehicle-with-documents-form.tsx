@@ -22,18 +22,30 @@ const DOCUMENT_TYPES = [
   { value: "other", label: "Other" },
 ] as const;
 
-// Simplified schema without make, model, vehicleClass
+// Schema with conditional validation based on document type
 const vehicleWithDocumentsSchema = z.object({
   registrationNumber: z.string().min(1, "Registration number is required"),
   ownerName: z.string().min(1, "Owner name is required"),
   ownerMobile: z.string().min(10, "Valid mobile number is required"),
   documents: z.array(z.object({
     type: z.enum(["insurance", "pollution", "tax", "fitness", "permit", "aadhar", "owner_book", "other"]),
-    expiryDate: z.string().min(1, "Expiry date is required"),
-    file: z.any().optional(), // File object
-    fileUrl: z.string().min(1, "Document file is required"),
+    expiryDate: z.string().optional(), // Optional, will validate conditionally
+    file: z.any().optional(),
+    fileUrl: z.string().optional(), // Optional, will validate conditionally
     notes: z.string().optional(),
-  })).optional(),
+  }).refine((doc) => {
+    // Owner book: Must have file, no expiry date needed
+    if (doc.type === "owner_book") {
+      return doc.fileUrl && doc.fileUrl.length > 0;
+    }
+    // All other documents: Must have expiry date, file is optional
+    return doc.expiryDate && doc.expiryDate.length > 0;
+  }, (doc) => ({
+    message: doc.type === "owner_book" 
+      ? "Owner Book requires a document file" 
+      : "Expiry date is required for this document type",
+    path: doc.type === "owner_book" ? ["fileUrl"] : ["expiryDate"],
+  }))).optional(),
 });
 
 type VehicleWithDocumentsFormData = z.infer<typeof vehicleWithDocumentsSchema>;
@@ -281,22 +293,24 @@ export function VehicleWithDocumentsForm({ onSubmit, isSubmitting, error }: Vehi
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium">
-                            Expiry Date *
-                          </label>
-                          <DatePicker
-                            value={getDocumentValue(type, "expiryDate")}
-                            onChange={(date) =>
-                              updateDocumentField(type, "expiryDate", date)
-                            }
-                            placeholder="Select expiry date"
-                          />
-                        </div>
+                        {type !== "owner_book" && (
+                          <div className="space-y-2">
+                            <label className="text-sm font-medium">
+                              Expiry Date *
+                            </label>
+                            <DatePicker
+                              value={getDocumentValue(type, "expiryDate")}
+                              onChange={(date) =>
+                                updateDocumentField(type, "expiryDate", date)
+                              }
+                              placeholder="Select expiry date"
+                            />
+                          </div>
+                        )}
 
-                        <div className="space-y-2">
+                        <div className={`space-y-2 ${type === "owner_book" ? "md:col-span-2" : ""}`}>
                           <label className="text-sm font-medium">
-                            Upload Document *
+                            Upload Document {type === "owner_book" ? "*" : "(Optional)"}
                           </label>
                           <div className="flex items-center gap-2">
                             <Button
