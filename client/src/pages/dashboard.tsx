@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search, AlertTriangle, CheckCircle2, Car as CarIcon, ArrowRight, Bell } from "lucide-react";
 import { Link } from "wouter";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { VehicleWithDocumentsForm } from "@/components/forms/vehicle-with-documents-form";
 import { useCreateVehicleWithDocuments } from "@/hooks/use-vehicles";
@@ -16,8 +16,19 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { LoadingScreen } from "@/components/ui/loading-spinner";
 
 export default function Dashboard() {
-  const [search, setSearch] = useState("");
-  const { data: vehicles, isLoading } = useVehicles(search);
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+    }, 300); // Wait 300ms after user stops typing
+    
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+  
+  const { data: vehicles, isLoading } = useVehicles(debouncedSearch);
   const { mutateAsync: createVehicleWithDocs, isPending: isCreating } = useCreateVehicleWithDocuments();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -208,8 +219,8 @@ export default function Dashboard() {
           <Search className="w-5 h-5 text-muted-foreground" />
           <Input 
             placeholder="Search by Registration Number..." 
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             className="border-none shadow-none focus-visible:ring-0 px-0 h-auto text-lg placeholder:text-muted-foreground/50"
           />
         </div>
@@ -247,7 +258,7 @@ export default function Dashboard() {
             <div className="col-span-full py-12 text-center text-muted-foreground bg-muted/20 rounded-xl border border-dashed">
               <CarIcon className="w-12 h-12 mx-auto mb-3 opacity-20" />
               <p>No vehicles found.</p>
-              {!search && <p className="text-sm mt-1">Click "Add Vehicle" to get started.</p>}
+              {!debouncedSearch && <p className="text-sm mt-1">Click "Add Vehicle" to get started.</p>}
             </div>
           )}
         </div>
