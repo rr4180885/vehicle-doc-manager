@@ -84,9 +84,17 @@ export function DocumentForm({ vehicleId, onSubmit, isSubmitting, defaultValues 
     }
   };
 
+  const handleSubmit = async (data: InsertDocument) => {
+    // For owner_book, set expiryDate to undefined
+    if (data.type === "owner_book") {
+      data.expiryDate = undefined;
+    }
+    await onSubmit(data);
+  };
+
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="type"
