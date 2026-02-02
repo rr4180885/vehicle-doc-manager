@@ -44,7 +44,7 @@ export default function Landing() {
         {/* Header */}
         <div className="flex items-center justify-center mb-8 gap-3">
           <Car className="h-8 w-8 text-blue-600" />
-          <h1 className="text-3xl font-bold text-slate-900">VehicleLedger</h1>
+          <h1 className="text-3xl font-bold text-slate-900">Maa Pollution Center</h1>
         </div>
 
         {/* Login Card */}
