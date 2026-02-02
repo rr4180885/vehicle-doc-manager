@@ -16,7 +16,7 @@ export function Sidebar() {
   return (
     <div className="flex h-full min-h-screen w-64 flex-col bg-card border-r border-border">
       <div className="flex h-16 items-center px-6 border-b border-border">
-        <Car className="h-6 w-6 text-primary mr-2" />
+        {/* <Car className="h-6 w-6 text-primary mr-2" /> */}
         <span className="font-display font-bold text-xl tracking-tight">Maa Pollution Center</span>
       </div>
       
