@@ -33,6 +33,7 @@ export default function Dashboard() {
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formError, setFormError] = useState<{ field?: string; message: string } | null>(null);
+  const [showAllAlerts, setShowAllAlerts] = useState(false);
 
   const handleCreate = async (data: any) => {
     try {
@@ -187,7 +188,7 @@ export default function Dashboard() {
               <Bell className="w-5 h-5 text-orange-500" />
               Document Expiry Alerts
             </h2>
-            {expiryData.alerts.slice(0, 5).map((alert, idx) => (
+            {(showAllAlerts ? expiryData.alerts : expiryData.alerts.slice(0, 5)).map((alert, idx) => (
               <Link key={idx} href={`/vehicles/${alert.vehicle.id}`}>
                 <Alert className={`cursor-pointer hover:bg-muted/50 transition-colors ${alert.status === 'expired' ? 'border-red-500 bg-red-50/50' : 'border-orange-500 bg-orange-50/50'}`}>
                   <AlertTriangle className={`h-4 w-4 ${alert.status === 'expired' ? 'text-red-600' : 'text-orange-600'}`} />
@@ -208,9 +209,18 @@ export default function Dashboard() {
               </Link>
             ))}
             {expiryData.alerts.length > 5 && (
-              <p className="text-sm text-muted-foreground text-center">
-                And {expiryData.alerts.length - 5} more alerts...
-              </p>
+              <div className="text-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAllAlerts(!showAllAlerts)}
+                  className="text-sm text-muted-foreground hover:text-primary"
+                >
+                  {showAllAlerts 
+                    ? 'Show less' 
+                    : `Show ${expiryData.alerts.length - 5} more alerts...`}
+                </Button>
+              </div>
             )}
           </div>
         )}
