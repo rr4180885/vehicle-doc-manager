@@ -68,12 +68,9 @@ export const insertDocumentSchema = baseDocumentSchema.refine((doc) => {
   }
   // All other documents: Must have expiryDate, fileUrl is optional
   return doc.expiryDate && doc.expiryDate.length > 0;
-}, (doc) => ({
-  message: doc.type === "owner_book" 
-    ? "Owner Book requires a document file" 
-    : "Expiry date is required for this document type",
-  path: [doc.type === "owner_book" ? "fileUrl" : "expiryDate"],
-}));
+}, {
+  message: "Document validation failed",
+});
 
 export type Vehicle = typeof vehicles.$inferSelect;
 export type InsertVehicle = z.infer<typeof insertVehicleSchema>;
@@ -97,12 +94,9 @@ export const createVehicleWithDocumentsSchema = insertVehicleSchema.extend({
       }
       // All other documents: Must have expiryDate, fileUrl is optional
       return doc.expiryDate && doc.expiryDate.length > 0;
-    }, (doc) => ({
-      message: doc.type === "owner_book" 
-        ? "Owner Book requires a document file" 
-        : "Expiry date is required for this document type",
-      path: [doc.type === "owner_book" ? "fileUrl" : "expiryDate"],
-    }))
+    }, {
+      message: "Document validation failed",
+    })
   ).optional()
 });
 
