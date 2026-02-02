@@ -55,11 +55,25 @@ export const insertVehicleSchema = createInsertSchema(vehicles).omit({
   userId: true // Set on backend
 });
 
-export const insertDocumentSchema = createInsertSchema(documents).omit({ 
+const baseDocumentSchema = createInsertSchema(documents).omit({ 
   id: true, 
   createdAt: true, 
   updatedAt: true 
 });
+
+export const insertDocumentSchema = baseDocumentSchema.refine((doc) => {
+  // Owner book: Must have fileUrl, expiryDate is optional
+  if (doc.type === "owner_book") {
+    return doc.fileUrl && doc.fileUrl.length > 0;
+  }
+  // All other documents: Must have expiryDate, fileUrl is optional
+  return doc.expiryDate && doc.expiryDate.length > 0;
+}, (doc) => ({
+  message: doc.type === "owner_book" 
+    ? "Owner Book requires a document file" 
+    : "Expiry date is required for this document type",
+  path: [doc.type === "owner_book" ? "fileUrl" : "expiryDate"],
+}));
 
 export type Vehicle = typeof vehicles.$inferSelect;
 export type InsertVehicle = z.infer<typeof insertVehicleSchema>;
@@ -76,7 +90,19 @@ export type VehicleWithDocuments = Vehicle & { documents: Document[] };
 // For creating vehicle with documents at once
 export const createVehicleWithDocumentsSchema = insertVehicleSchema.extend({
   documents: z.array(
-    insertDocumentSchema.omit({ vehicleId: true })
+    baseDocumentSchema.omit({ vehicleId: true }).refine((doc) => {
+      // Owner book: Must have fileUrl, expiryDate is optional
+      if (doc.type === "owner_book") {
+        return doc.fileUrl && doc.fileUrl.length > 0;
+      }
+      // All other documents: Must have expiryDate, fileUrl is optional
+      return doc.expiryDate && doc.expiryDate.length > 0;
+    }, (doc) => ({
+      message: doc.type === "owner_book" 
+        ? "Owner Book requires a document file" 
+        : "Expiry date is required for this document type",
+      path: [doc.type === "owner_book" ? "fileUrl" : "expiryDate"],
+    }))
   ).optional()
 });
 
