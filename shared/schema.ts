@@ -55,21 +55,10 @@ export const insertVehicleSchema = createInsertSchema(vehicles).omit({
   userId: true // Set on backend
 });
 
-const baseDocumentSchema = createInsertSchema(documents).omit({ 
+export const insertDocumentSchema = createInsertSchema(documents).omit({ 
   id: true, 
   createdAt: true, 
   updatedAt: true 
-});
-
-export const insertDocumentSchema = baseDocumentSchema.refine((doc) => {
-  // Owner book: Must have fileUrl, expiryDate is optional
-  if (doc.type === "owner_book") {
-    return doc.fileUrl && doc.fileUrl.length > 0;
-  }
-  // All other documents: Must have expiryDate, fileUrl is optional
-  return doc.expiryDate && doc.expiryDate.length > 0;
-}, {
-  message: "Document validation failed",
 });
 
 export type Vehicle = typeof vehicles.$inferSelect;
@@ -87,16 +76,7 @@ export type VehicleWithDocuments = Vehicle & { documents: Document[] };
 // For creating vehicle with documents at once
 export const createVehicleWithDocumentsSchema = insertVehicleSchema.extend({
   documents: z.array(
-    baseDocumentSchema.omit({ vehicleId: true }).refine((doc) => {
-      // Owner book: Must have fileUrl, expiryDate is optional
-      if (doc.type === "owner_book") {
-        return doc.fileUrl && doc.fileUrl.length > 0;
-      }
-      // All other documents: Must have expiryDate, fileUrl is optional
-      return doc.expiryDate && doc.expiryDate.length > 0;
-    }, {
-      message: "Document validation failed",
-    })
+    insertDocumentSchema.omit({ vehicleId: true })
   ).optional()
 });
 
