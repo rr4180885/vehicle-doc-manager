@@ -39,16 +39,16 @@ export default function Landing() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-100 flex items-center justify-center">
+      <div className="w-full max-w-md px-4">
         {/* Header */}
         <div className="flex items-center justify-center mb-8 gap-3">
           <Car className="h-8 w-8 text-blue-600" />
-          <h1 className="text-3xl font-bold text-slate-900">Maa Pollution Testing Center</h1>
+          <h1 className="text-3xl font-bold text-slate-900">VehicleLedger</h1>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
-          {/* Login Card */}
+        {/* Login Card */}
+        <div className="w-full">
           <div className="flex items-center justify-center">
             <Card className="w-full max-w-md shadow-xl">
               <CardHeader className="space-y-1">
