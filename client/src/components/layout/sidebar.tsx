@@ -17,7 +17,7 @@ export function Sidebar() {
     <div className="flex h-full min-h-screen w-64 flex-col bg-card border-r border-border">
       <div className="flex h-16 items-center px-6 border-b border-border">
         <Car className="h-6 w-6 text-primary mr-2" />
-        <span className="font-display font-bold text-xl tracking-tight">VehicleLedger</span>
+        <span className="font-display font-bold text-xl tracking-tight">Maa Pollution Testing Center</span>
       </div>
       
       <div className="flex flex-1 flex-col gap-y-4 overflow-y-auto px-4 py-6">

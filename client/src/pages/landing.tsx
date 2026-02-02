@@ -44,7 +44,7 @@ export default function Landing() {
         {/* Header */}
         <div className="flex items-center justify-center mb-8 gap-3">
           <Car className="h-8 w-8 text-blue-600" />
-          <h1 className="text-3xl font-bold text-slate-900">VehicleLedger</h1>
+          <h1 className="text-3xl font-bold text-slate-900">Maa Pollution Testing Center</h1>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
@@ -95,7 +95,7 @@ export default function Landing() {
             </Card>
           </div>
 
-          {/* Features */}
+          {/* Features
           <div className="space-y-6">
             <div>
               <h2 className="text-3xl font-bold text-slate-900 mb-4">
@@ -155,7 +155,7 @@ export default function Landing() {
                 </div>
               </div>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
