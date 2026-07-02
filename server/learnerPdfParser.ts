@@ -1,5 +1,24 @@
-import { PDFParse } from "pdf-parse";
+import * as napiCanvas from "@napi-rs/canvas";
 import type { ParsedLearnerPdf } from "../shared/driving-license-utils.js";
+
+// `pdf-parse` depends on `pdfjs-dist`, which references browser globals like
+// `DOMMatrix` at module-evaluation time (not lazily). In Node it tries to
+// polyfill them itself via an internal `require("@napi-rs/canvas")`, but on
+// some serverless platforms (e.g. Vercel) that dynamic require isn't picked
+// up by the function bundler's dependency tracer, so the polyfill silently
+// fails and importing `pdf-parse` throws `ReferenceError: DOMMatrix is not
+// defined`. We set the globals ourselves from the same package, and defer
+// loading `pdf-parse` (via dynamic import) so this always runs first.
+(globalThis as any).DOMMatrix ??= napiCanvas.DOMMatrix;
+(globalThis as any).ImageData ??= napiCanvas.ImageData;
+(globalThis as any).Path2D ??= napiCanvas.Path2D;
+(globalThis as any).Image ??= napiCanvas.Image;
+
+let pdfParseModule: Promise<typeof import("pdf-parse")> | null = null;
+function loadPdfParse() {
+  if (!pdfParseModule) pdfParseModule = import("pdf-parse");
+  return pdfParseModule;
+}
 
 // ---------------------------------------------------------------------------
 // Parsing helpers — inlined here so tsx server watch always picks them up
@@ -146,6 +165,7 @@ export async function extractLearnerPdfData(buffer: Buffer): Promise<{
   text: string;
   extracted: ParsedLearnerPdf;
 }> {
+  const { PDFParse } = await loadPdfParse();
   const parser = new PDFParse({ data: buffer });
   try {
     const result = await parser.getText();
