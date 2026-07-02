@@ -107,7 +107,7 @@ export class UserStorage {
       throw error;
     }
 
-    const generatedPassword = generatePassword();
+    const generatedPassword = data.password?.trim() || generatePassword();
     const passwordHash = await this.hashPassword(generatedPassword);
 
     const [user] = await database
@@ -147,7 +147,7 @@ export class UserStorage {
     return toSafeUser(updated);
   }
 
-  async resetPassword(userId: string): Promise<ResetPasswordResponse> {
+  async resetPassword(userId: string, newPassword?: string): Promise<ResetPasswordResponse> {
     const database = this.checkDb();
     const user = await this.getUserById(userId);
     if (!user) {
@@ -157,7 +157,7 @@ export class UserStorage {
       throw new Error("Can only reset password for operator users");
     }
 
-    const generatedPassword = generatePassword();
+    const generatedPassword = newPassword?.trim() || generatePassword();
     const passwordHash = await this.hashPassword(generatedPassword);
     await database
       .update(users)

@@ -52,6 +52,7 @@ export const createOperatorSchema = z
     email: z.string().email("Valid email is required"),
     mobile: z.string().min(10, "Mobile number must be at least 10 digits"),
     userId: z.string().min(3, "User ID must be at least 3 characters").optional(),
+    password: z.string().min(6, "Password must be at least 6 characters").optional(),
     profileImageUrl: z.string().optional(),
     canAccessVehicles: z.boolean().default(true),
     canAccessDrivingLicenses: z.boolean().default(false),
@@ -60,6 +61,10 @@ export const createOperatorSchema = z
     message: "At least one section must be enabled",
     path: ["canAccessVehicles"],
   });
+
+export const resetOperatorPasswordSchema = z.object({
+  password: z.string().min(6, "Password must be at least 6 characters").optional(),
+});
 
 export const updateOperatorSchema = z
   .object({
@@ -94,6 +99,7 @@ export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type CreateOperatorRequest = z.infer<typeof createOperatorSchema>;
 export type UpdateOperatorRequest = z.infer<typeof updateOperatorSchema>;
+export type ResetOperatorPasswordRequest = z.infer<typeof resetOperatorPasswordSchema>;
 
 export type OperatorPermissions = {
   canAccessVehicles: boolean;

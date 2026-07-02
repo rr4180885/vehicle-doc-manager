@@ -45,9 +45,14 @@ async function updateOperator(userId: string, data: UpdateOperatorRequest): Prom
   return response.json();
 }
 
-async function resetPassword(userId: string): Promise<ResetPasswordResponse> {
+async function resetPassword(
+  userId: string,
+  password?: string
+): Promise<ResetPasswordResponse> {
   const response = await fetch(`/api/users/${userId}/reset-password`, {
     method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(password?.trim() ? { password: password.trim() } : {}),
     credentials: "include",
   });
   if (!response.ok) {
@@ -88,7 +93,8 @@ export function useUpdateOperator() {
 export function useResetPassword() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: resetPassword,
+    mutationFn: ({ userId, password }: { userId: string; password?: string }) =>
+      resetPassword(userId, password),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/users"] });
     },

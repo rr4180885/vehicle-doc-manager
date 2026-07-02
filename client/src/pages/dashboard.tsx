@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import { useMemo, useState } from "react";
-import { differenceInDays, parseISO } from "date-fns";
+import { differenceInCalendarDays, parseISO, startOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import { getAllDrivingLicenseAlerts, type DrivingLicenseAlert } from "@shared/driving-license-utils";
 import { Button } from "@/components/ui/button";
@@ -128,12 +128,12 @@ export default function Dashboard() {
   const vehicleAlerts = useMemo(() => {
     if (!vehicles) return [] as VehicleAlert[];
     const alerts: VehicleAlert[] = [];
-    const today = new Date();
+    const today = startOfDay(new Date());
 
     vehicles.forEach((vehicle) => {
       vehicle.documents?.forEach((doc) => {
         if (!doc.expiryDate) return;
-        const daysUntilExpiry = differenceInDays(parseISO(doc.expiryDate), today);
+        const daysUntilExpiry = differenceInCalendarDays(parseISO(doc.expiryDate), today);
         if (daysUntilExpiry < 0) {
           alerts.push({ kind: "vehicle", vehicle, doc, daysUntilExpiry, status: "expired" });
         } else if (daysUntilExpiry <= 30) {

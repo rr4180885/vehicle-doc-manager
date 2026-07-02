@@ -37,6 +37,7 @@ type OperatorFormData = {
   email: string;
   mobile: string;
   userId: string;
+  password: string;
   profileImageUrl: string;
   canAccessVehicles: boolean;
   canAccessDrivingLicenses: boolean;
@@ -47,6 +48,7 @@ const emptyForm: OperatorFormData = {
   email: "",
   mobile: "",
   userId: "",
+  password: "",
   profileImageUrl: "",
   canAccessVehicles: true,
   canAccessDrivingLicenses: false,
@@ -124,6 +126,7 @@ function OperatorFormFields({
   onPhotoUpload,
   showUserId = true,
   userIdReadOnly = false,
+  showPassword = false,
 }: {
   form: OperatorFormData;
   setForm: React.Dispatch<React.SetStateAction<OperatorFormData>>;
@@ -131,6 +134,7 @@ function OperatorFormFields({
   onPhotoUpload: (e: React.ChangeEvent<HTMLInputElement>) => void;
   showUserId?: boolean;
   userIdReadOnly?: boolean;
+  showPassword?: boolean;
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -211,6 +215,23 @@ function OperatorFormFields({
           />
         </div>
       )}
+      {showPassword && (
+        <div className="space-y-2">
+          <Label htmlFor="password" className="text-sm font-medium">Password (optional)</Label>
+          <Input
+            id="password"
+            type="password"
+            value={form.password}
+            onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+            placeholder="Leave blank to auto-generate"
+            minLength={6}
+            className="input-modern"
+          />
+          <p className="text-xs text-muted-foreground">
+            If left empty, a password will be generated and shown after creation.
+          </p>
+        </div>
+      )}
       <div className="rounded-xl border border-border/60 bg-muted/30 p-4 space-y-3">
         <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
           <Users className="h-4 w-4 text-primary" />
@@ -252,6 +273,7 @@ function operatorToForm(op: SafeUser): OperatorFormData {
     email: op.email || "",
     mobile: op.mobile || "",
     userId: op.username || "",
+    password: "",
     profileImageUrl: op.profileImageUrl || "",
     canAccessVehicles: op.canAccessVehicles,
     canAccessDrivingLicenses: op.canAccessDrivingLicenses,
@@ -274,6 +296,8 @@ export default function AdminUsers() {
   const [isUploadingCreate, setIsUploadingCreate] = useState(false);
   const [isUploadingEdit, setIsUploadingEdit] = useState(false);
   const [credentials, setCredentials] = useState<{ userId: string; password: string; title: string } | null>(null);
+  const [resetOperator, setResetOperator] = useState<SafeUser | null>(null);
+  const [resetPasswordValue, setResetPasswordValue] = useState("");
 
   useEffect(() => {
     if (!authLoading && !isAdmin) {
@@ -328,6 +352,9 @@ export default function AdminUsers() {
       if (createForm.userId.trim()) {
         payload.userId = createForm.userId.trim();
       }
+      if (createForm.password.trim()) {
+        payload.password = createForm.password.trim();
+      }
       const result = await createOperator(payload);
       setIsCreateOpen(false);
       setCreateForm(emptyForm);
@@ -373,13 +400,28 @@ export default function AdminUsers() {
     }
   };
 
-  const handleResetPassword = async (operator: SafeUser) => {
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetOperator) return;
+    if (resetPasswordValue.trim() && resetPasswordValue.trim().length < 6) {
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters",
+        variant: "destructive",
+      });
+      return;
+    }
     try {
-      const result = await resetPassword(operator.id);
+      const result = await resetPassword({
+        userId: resetOperator.id,
+        password: resetPasswordValue.trim() || undefined,
+      });
+      setResetOperator(null);
+      setResetPasswordValue("");
       setCredentials({
         userId: result.username,
         password: result.generatedPassword,
-        title: `Password Reset — ${operator.name || operator.username}`,
+        title: `Password Reset — ${resetOperator.name || resetOperator.username}`,
       });
     } catch (error: any) {
       toast({
@@ -423,6 +465,7 @@ export default function AdminUsers() {
                   setForm={setCreateForm}
                   isUploading={isUploadingCreate}
                   onPhotoUpload={(e) => handlePhotoUpload(e, "create")}
+                  showPassword
                 />
                 <Button type="submit" className="w-full btn-primary rounded-xl" disabled={isCreating}>
                   {isCreating ? "Creating..." : "Create Operator"}
@@ -508,8 +551,10 @@ export default function AdminUsers() {
                         variant="outline"
                         size="sm"
                         className="rounded-lg"
-                        disabled={isResetting}
-                        onClick={() => handleResetPassword(op)}
+                        onClick={() => {
+                          setResetOperator(op);
+                          setResetPasswordValue("");
+                        }}
                         title="Reset Password"
                       >
                         <KeyRound className="w-4 h-4 sm:mr-1.5" />
@@ -539,6 +584,46 @@ export default function AdminUsers() {
             />
             <Button type="submit" className="w-full btn-primary rounded-xl" disabled={isUpdating}>
               {isUpdating ? "Saving..." : "Save Changes"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={!!resetOperator}
+        onOpenChange={(open) => {
+          if (!open) {
+            setResetOperator(null);
+            setResetPasswordValue("");
+          }
+        }}
+      >
+        <DialogContent className="rounded-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              Reset Password — {resetOperator?.name || resetOperator?.username}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleResetPassword} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="resetPassword" className="text-sm font-medium">
+                New Password (optional)
+              </Label>
+              <Input
+                id="resetPassword"
+                type="password"
+                value={resetPasswordValue}
+                onChange={(e) => setResetPasswordValue(e.target.value)}
+                placeholder="Leave blank to auto-generate"
+                minLength={6}
+                className="input-modern"
+              />
+              <p className="text-xs text-muted-foreground">
+                If left empty, a new password will be generated and shown after reset.
+              </p>
+            </div>
+            <Button type="submit" className="w-full btn-primary rounded-xl" disabled={isResetting}>
+              {isResetting ? "Resetting..." : "Reset Password"}
             </Button>
           </form>
         </DialogContent>

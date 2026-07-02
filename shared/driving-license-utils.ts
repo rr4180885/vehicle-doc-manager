@@ -1,4 +1,4 @@
-import { differenceInDays, parseISO, isValid } from "date-fns";
+import { differenceInCalendarDays, parseISO, isValid, startOfDay } from "date-fns";
 import type { DrivingLicense } from "./schema.js";
 
 export type DrivingLicenseAlertType =
@@ -18,6 +18,7 @@ export function getDrivingLicenseAlerts(
   today: Date = new Date()
 ): DrivingLicenseAlert[] {
   const alerts: DrivingLicenseAlert[] = [];
+  const todayStart = startOfDay(today);
 
   if (!license.learnerPdfUrl) {
     alerts.push({
@@ -32,7 +33,7 @@ export function getDrivingLicenseAlerts(
   if (license.expiryDate) {
     const expiryDate = parseISO(license.expiryDate);
     if (isValid(expiryDate)) {
-      const daysUntilExpiry = differenceInDays(expiryDate, today);
+      const daysUntilExpiry = differenceInCalendarDays(expiryDate, todayStart);
       if (daysUntilExpiry < 0) {
         isExpired = true;
         alerts.push({
@@ -50,7 +51,7 @@ export function getDrivingLicenseAlerts(
   if (!isExpired && license.issueDate) {
     const issueDate = parseISO(license.issueDate);
     if (isValid(issueDate)) {
-      const daysSinceIssue = differenceInDays(today, issueDate);
+      const daysSinceIssue = differenceInCalendarDays(todayStart, issueDate);
       if (daysSinceIssue >= 30) {
         alerts.push({
           type: "apply_final",

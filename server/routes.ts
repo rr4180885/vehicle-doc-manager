@@ -6,7 +6,7 @@ import { z } from "zod";
 import { setupAuth, registerAuthRoutes, isAuthenticated, requireAdmin, requireSection, canAccessResource, initAuth } from "./auth.js";
 import { userStorage } from "./userStorage.js";
 import { createVehicleWithDocumentsSchema, insertDrivingLicenseSchema } from "../shared/schema.js";
-import { createOperatorSchema, updateOperatorSchema } from "../shared/models/auth.js";
+import { createOperatorSchema, updateOperatorSchema, resetOperatorPasswordSchema } from "../shared/models/auth.js";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage/index.js";
 import { upload, getFileUrl, uploadToVercelBlob, isUsingVercelBlob } from "./upload.js";
 import { extractLearnerPdfData } from "./learnerPdfParser.js";
@@ -117,9 +117,16 @@ export async function registerRoutes(
 
   app.put("/api/users/:id/reset-password", isAuthenticated, requireAdmin, async (req, res) => {
     try {
-      const result = await userStorage.resetPassword(String(req.params.id));
+      const input = resetOperatorPasswordSchema.parse(req.body ?? {});
+      const result = await userStorage.resetPassword(String(req.params.id), input.password);
       res.json(result);
     } catch (err: any) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join("."),
+        });
+      }
       if (err.message === "User not found") {
         return res.status(404).json({ message: err.message });
       }
