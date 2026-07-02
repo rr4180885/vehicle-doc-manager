@@ -6,9 +6,8 @@
   "framework": null,
   "functions": {
     "api/**/*.ts": {
-      "memory": 1024,
       "maxDuration": 10,
-      "includeFiles": "node_modules/@napi-rs/canvas*/**"
+      "includeFiles": ["node_modules/@napi-rs/canvas*/**", "node_modules/pdfjs-dist/**"]
     }
   },
   "rewrites": [
