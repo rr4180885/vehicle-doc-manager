@@ -28,7 +28,26 @@ export function getDrivingLicenseAlerts(
     });
   }
 
-  if (license.issueDate) {
+  let isExpired = false;
+  if (license.expiryDate) {
+    const expiryDate = parseISO(license.expiryDate);
+    if (isValid(expiryDate)) {
+      const daysUntilExpiry = differenceInDays(expiryDate, today);
+      if (daysUntilExpiry < 0) {
+        isExpired = true;
+        alerts.push({
+          type: "learner_expired",
+          message: "Please Reissue the Learner — it has been expired",
+          license,
+          priority: 1,
+        });
+      }
+    }
+  }
+
+  // Once the learner license has expired, applying for the final driving
+  // license no longer makes sense until it's reissued — so skip that alert.
+  if (!isExpired && license.issueDate) {
     const issueDate = parseISO(license.issueDate);
     if (isValid(issueDate)) {
       const daysSinceIssue = differenceInDays(today, issueDate);
@@ -38,21 +57,6 @@ export function getDrivingLicenseAlerts(
           message: "Apply for the Final Driving License",
           license,
           priority: 2,
-        });
-      }
-    }
-  }
-
-  if (license.expiryDate) {
-    const expiryDate = parseISO(license.expiryDate);
-    if (isValid(expiryDate)) {
-      const daysUntilExpiry = differenceInDays(expiryDate, today);
-      if (daysUntilExpiry < 0) {
-        alerts.push({
-          type: "learner_expired",
-          message: "Please Reissue the Learner — it has been expired",
-          license,
-          priority: 1,
         });
       }
     }

@@ -157,13 +157,13 @@ export default function VehicleDetails() {
       </div>
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="mb-6 rounded-xl bg-muted/60 p-1 h-11">
-          <TabsTrigger value="overview" className="rounded-lg gap-2 px-4">
-            <User className="h-4 w-4" /> Overview
+        <TabsList className="mb-6 grid w-full grid-cols-2 rounded-xl bg-muted/60 p-1 h-11 sm:inline-flex sm:w-auto">
+          <TabsTrigger value="overview" className="min-w-0 gap-1.5 px-2 rounded-lg sm:gap-2 sm:px-4">
+            <User className="h-4 w-4 shrink-0" /> <span className="truncate">Overview</span>
           </TabsTrigger>
-          <TabsTrigger value="documents" className="rounded-lg gap-2 px-4">
-            <LayoutGrid className="h-4 w-4" /> Documents
-            <span className="badge-pill bg-primary/10 text-primary font-semibold ml-1">{docCount}</span>
+          <TabsTrigger value="documents" className="min-w-0 gap-1.5 px-2 rounded-lg sm:gap-2 sm:px-4">
+            <LayoutGrid className="h-4 w-4 shrink-0" /> <span className="truncate">Documents</span>
+            <span className="badge-pill bg-primary/10 text-primary font-semibold ml-1 shrink-0">{docCount}</span>
           </TabsTrigger>
         </TabsList>
 

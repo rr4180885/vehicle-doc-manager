@@ -282,16 +282,21 @@ export default function DrivingLicenseDetails() {
       )}
 
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="mb-6 rounded-xl bg-muted/60 p-1 h-11">
-          <TabsTrigger value="overview" className="rounded-lg gap-2 px-4">
-            <User className="h-4 w-4" /> Overview
+        <TabsList
+          className={cn(
+            "mb-6 grid w-full rounded-xl bg-muted/60 p-1 h-11 sm:inline-flex sm:w-auto",
+            hasPayment ? "grid-cols-3" : "grid-cols-2"
+          )}
+        >
+          <TabsTrigger value="overview" className="min-w-0 gap-1.5 px-2 rounded-lg sm:gap-2 sm:px-4">
+            <User className="h-4 w-4 shrink-0" /> <span className="truncate">Overview</span>
           </TabsTrigger>
-          <TabsTrigger value="documents" className="rounded-lg gap-2 px-4">
-            <FileText className="h-4 w-4" /> Documents
+          <TabsTrigger value="documents" className="min-w-0 gap-1.5 px-2 rounded-lg sm:gap-2 sm:px-4">
+            <FileText className="h-4 w-4 shrink-0" /> <span className="truncate">Documents</span>
           </TabsTrigger>
           {hasPayment && (
-            <TabsTrigger value="payments" className="rounded-lg gap-2 px-4">
-              <IndianRupee className="h-4 w-4" /> Payments
+            <TabsTrigger value="payments" className="min-w-0 gap-1.5 px-2 rounded-lg sm:gap-2 sm:px-4">
+              <IndianRupee className="h-4 w-4 shrink-0" /> <span className="truncate">Payments</span>
             </TabsTrigger>
           )}
         </TabsList>
@@ -382,9 +387,9 @@ export default function DrivingLicenseDetails() {
               </div>
 
               <div className="mb-6">
-                <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
-                  <span>{paidPct}% paid</span>
-                  <span>₹{paid.toLocaleString("en-IN")} of ₹{total.toLocaleString("en-IN")}</span>
+                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs text-muted-foreground mb-2">
+                  <span className="shrink-0">{paidPct}% paid</span>
+                  <span className="truncate">₹{paid.toLocaleString("en-IN")} of ₹{total.toLocaleString("en-IN")}</span>
                 </div>
                 <div className="h-2.5 w-full rounded-full bg-muted overflow-hidden">
                   <div
@@ -397,21 +402,21 @@ export default function DrivingLicenseDetails() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4 text-center">
-                <div className="rounded-xl bg-muted/40 p-4">
-                  <p className="text-xs text-muted-foreground mb-1">Total</p>
-                  <p className="text-lg font-bold">₹{total.toLocaleString("en-IN")}</p>
+              <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center">
+                <div className="min-w-0 rounded-xl bg-muted/40 p-2.5 sm:p-4">
+                  <p className="text-xs text-muted-foreground mb-1 truncate">Total</p>
+                  <p className="text-sm sm:text-lg font-bold truncate">₹{total.toLocaleString("en-IN")}</p>
                 </div>
-                <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4">
-                  <p className="text-xs text-emerald-700 mb-1">Paid</p>
-                  <p className="text-lg font-bold text-emerald-800">₹{paid.toLocaleString("en-IN")}</p>
+                <div className="min-w-0 rounded-xl bg-emerald-50 border border-emerald-200 p-2.5 sm:p-4">
+                  <p className="text-xs text-emerald-700 mb-1 truncate">Paid</p>
+                  <p className="text-sm sm:text-lg font-bold text-emerald-800 truncate">₹{paid.toLocaleString("en-IN")}</p>
                 </div>
                 <div className={cn(
-                  "rounded-xl p-4",
+                  "min-w-0 rounded-xl p-2.5 sm:p-4",
                   due > 0 ? "bg-amber-50 border border-amber-200" : "bg-emerald-50 border border-emerald-200"
                 )}>
-                  <p className={cn("text-xs mb-1", due > 0 ? "text-amber-700" : "text-emerald-700")}>Due</p>
-                  <p className={cn("text-lg font-bold", due > 0 ? "text-amber-800" : "text-emerald-800")}>
+                  <p className={cn("text-xs mb-1 truncate", due > 0 ? "text-amber-700" : "text-emerald-700")}>Due</p>
+                  <p className={cn("text-sm sm:text-lg font-bold truncate", due > 0 ? "text-amber-800" : "text-emerald-800")}>
                     ₹{due.toLocaleString("en-IN")}
                   </p>
                 </div>
