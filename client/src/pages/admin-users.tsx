@@ -27,6 +27,8 @@ import {
   Car,
   IdCard,
   ShieldAlert,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { useLocation } from "wouter";
 import type { SafeUser, CreateOperatorRequest, UpdateOperatorRequest } from "@shared/models/auth";
@@ -53,6 +55,44 @@ const emptyForm: OperatorFormData = {
   canAccessVehicles: true,
   canAccessDrivingLicenses: false,
 };
+
+function PasswordField({
+  id,
+  value,
+  onChange,
+  placeholder,
+}: {
+  id: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+}) {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <div className="relative">
+      <Input
+        id={id}
+        type={visible ? "text" : "password"}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        minLength={6}
+        className="input-modern pr-10"
+      />
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2 rounded-lg text-muted-foreground hover:text-foreground"
+        onClick={() => setVisible((v) => !v)}
+        aria-label={visible ? "Hide password" : "Show password"}
+      >
+        {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+      </Button>
+    </div>
+  );
+}
 
 function CopyField({ label, value }: { label: string; value: string }) {
   const [copied, setCopied] = useState(false);
@@ -218,14 +258,11 @@ function OperatorFormFields({
       {showPassword && (
         <div className="space-y-2">
           <Label htmlFor="password" className="text-sm font-medium">Password (optional)</Label>
-          <Input
+          <PasswordField
             id="password"
-            type="password"
             value={form.password}
-            onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+            onChange={(password) => setForm((f) => ({ ...f, password }))}
             placeholder="Leave blank to auto-generate"
-            minLength={6}
-            className="input-modern"
           />
           <p className="text-xs text-muted-foreground">
             If left empty, a password will be generated and shown after creation.
@@ -609,14 +646,11 @@ export default function AdminUsers() {
               <Label htmlFor="resetPassword" className="text-sm font-medium">
                 New Password (optional)
               </Label>
-              <Input
+              <PasswordField
                 id="resetPassword"
-                type="password"
                 value={resetPasswordValue}
-                onChange={(e) => setResetPasswordValue(e.target.value)}
+                onChange={setResetPasswordValue}
                 placeholder="Leave blank to auto-generate"
-                minLength={6}
-                className="input-modern"
               />
               <p className="text-xs text-muted-foreground">
                 If left empty, a new password will be generated and shown after reset.
