@@ -1,16 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-
-interface User {
-  id: string;
-  username: string;
-}
+import type { SessionUser } from "@shared/models/auth";
 
 interface LoginCredentials {
   username: string;
   password: string;
 }
 
-async function fetchUser(): Promise<User | null> {
+async function fetchUser(): Promise<SessionUser | null> {
   const response = await fetch("/api/auth/user", {
     credentials: "include",
   });
@@ -27,7 +23,7 @@ async function fetchUser(): Promise<User | null> {
   return data.user;
 }
 
-async function loginUser(credentials: LoginCredentials): Promise<User> {
+async function loginUser(credentials: LoginCredentials): Promise<SessionUser> {
   const response = await fetch("/api/auth/login", {
     method: "POST",
     headers: {
@@ -59,11 +55,11 @@ async function logoutUser(): Promise<void> {
 
 export function useAuth() {
   const queryClient = useQueryClient();
-  const { data: user, isLoading } = useQuery<User | null>({
+  const { data: user, isLoading } = useQuery<SessionUser | null>({
     queryKey: ["/api/auth/user"],
     queryFn: fetchUser,
     retry: false,
-    staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 
   const loginMutation = useMutation({
@@ -77,19 +73,30 @@ export function useAuth() {
     mutationFn: logoutUser,
     onSuccess: () => {
       queryClient.setQueryData(["/api/auth/user"], null);
-      // Redirect to landing page after logout
       window.location.href = "/";
     },
   });
+
+  const isAdmin = user?.role === "admin";
 
   return {
     user,
     isLoading,
     isAuthenticated: !!user,
+    isAdmin,
+    canAccessVehicles: isAdmin || !!user?.canAccessVehicles,
+    canAccessDrivingLicenses: isAdmin || !!user?.canAccessDrivingLicenses,
     login: loginMutation.mutateAsync,
     isLoggingIn: loginMutation.isPending,
     loginError: loginMutation.error,
     logout: logoutMutation.mutate,
     isLoggingOut: logoutMutation.isPending,
   };
+}
+
+export function getDefaultHomePath(user: SessionUser | null | undefined): string {
+  if (!user) return "/";
+  if (user.role === "admin" || user.canAccessVehicles) return "/dashboard";
+  if (user.canAccessDrivingLicenses) return "/driving-licenses";
+  return "/dashboard";
 }

@@ -87,10 +87,11 @@ async function deleteVehicle(id: number): Promise<void> {
   }
 }
 
-export function useVehicles(search?: string) {
+export function useVehicles(search?: string, options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ["/api/vehicles", search],
     queryFn: () => fetchVehicles(search),
+    enabled: options?.enabled ?? true,
   });
 }
 

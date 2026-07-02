@@ -1,11 +1,13 @@
 import { 
-  vehicles, documents, 
+  vehicles, documents, drivingLicenses,
   type Vehicle, type InsertVehicle, type UpdateVehicleRequest,
   type Document, type InsertDocument, type UpdateDocumentRequest,
-  type VehicleWithDocuments, type CreateVehicleWithDocuments
+  type VehicleWithDocuments, type CreateVehicleWithDocuments,
+  type DrivingLicense, type InsertDrivingLicense, type UpdateDrivingLicenseRequest
 } from "../shared/schema.js";
+import type { UserRole } from "../shared/models/auth.js";
 import { db } from "./db.js";
-import { eq, ilike, and, desc } from "drizzle-orm";
+import { eq, ilike, and, desc, or } from "drizzle-orm";
 
 export interface IStorage {
   // Vehicles
@@ -22,6 +24,13 @@ export interface IStorage {
   deleteDocument(id: number): Promise<void>;
   getDocumentsByVehicleId(vehicleId: number): Promise<Document[]>;
   getDocument(id: number): Promise<Document | undefined>;
+
+  // Driving Licenses
+  getDrivingLicenses(userId: string, role: UserRole, search?: string): Promise<DrivingLicense[]>;
+  getDrivingLicense(id: number): Promise<DrivingLicense | undefined>;
+  createDrivingLicense(userId: string, data: InsertDrivingLicense): Promise<DrivingLicense>;
+  updateDrivingLicense(id: number, updates: UpdateDrivingLicenseRequest): Promise<DrivingLicense>;
+  deleteDrivingLicense(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -32,11 +41,10 @@ export class DatabaseStorage implements IStorage {
     return db;
   }
 
-  async getVehicles(userId: string, search?: string): Promise<VehicleWithDocuments[]> {
+  async getVehicles(userId: string, search?: string, role: UserRole = "operator"): Promise<VehicleWithDocuments[]> {
     const database = this.checkDb();
     
-    // Build where conditions
-    const conditions = [eq(vehicles.userId, userId)];
+    const conditions = role === "admin" ? [] : [eq(vehicles.userId, userId)];
     if (search) {
       conditions.push(ilike(vehicles.registrationNumber, `%${search}%`));
     }
@@ -45,7 +53,7 @@ export class DatabaseStorage implements IStorage {
     const vehiclesList = await database
       .select()
       .from(vehicles)
-      .where(and(...conditions))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
       .orderBy(desc(vehicles.createdAt));
     
     if (vehiclesList.length === 0) {
@@ -193,6 +201,60 @@ export class DatabaseStorage implements IStorage {
     const database = this.checkDb();
     const [doc] = await database.select().from(documents).where(eq(documents.id, id)).limit(1);
     return doc;
+  }
+
+  async getDrivingLicenses(userId: string, role: UserRole, search?: string): Promise<DrivingLicense[]> {
+    const database = this.checkDb();
+    const conditions = role === "admin" ? [] : [eq(drivingLicenses.userId, userId)];
+    if (search) {
+      conditions.push(
+        or(
+          ilike(drivingLicenses.applicantName, `%${search}%`),
+          ilike(drivingLicenses.mobile, `%${search}%`),
+          ilike(drivingLicenses.licenseNumber, `%${search}%`)
+        )!
+      );
+    }
+
+    return database
+      .select()
+      .from(drivingLicenses)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(drivingLicenses.createdAt));
+  }
+
+  async getDrivingLicense(id: number): Promise<DrivingLicense | undefined> {
+    const database = this.checkDb();
+    const [license] = await database
+      .select()
+      .from(drivingLicenses)
+      .where(eq(drivingLicenses.id, id))
+      .limit(1);
+    return license;
+  }
+
+  async createDrivingLicense(userId: string, data: InsertDrivingLicense): Promise<DrivingLicense> {
+    const database = this.checkDb();
+    const [license] = await database
+      .insert(drivingLicenses)
+      .values({ ...data, userId })
+      .returning();
+    return license;
+  }
+
+  async updateDrivingLicense(id: number, updates: UpdateDrivingLicenseRequest): Promise<DrivingLicense> {
+    const database = this.checkDb();
+    const [updated] = await database
+      .update(drivingLicenses)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(drivingLicenses.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteDrivingLicense(id: number): Promise<void> {
+    const database = this.checkDb();
+    await database.delete(drivingLicenses).where(eq(drivingLicenses.id, id));
   }
 }
 

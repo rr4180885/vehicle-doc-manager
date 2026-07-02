@@ -2,52 +2,41 @@ import { Request, Response, NextFunction } from "express";
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import { pool } from "./db.js";
+import { userStorage } from "./userStorage.js";
+import { toSessionUser, type SessionUser, type UserRole } from "../shared/models/auth.js";
 
 const PgSession = connectPgSimple(session);
 
-// Default credentials
-const DEFAULT_USER = {
-  id: "kisun01",
-  username: "kisun01",
-  password: "Kisun@7257"
-};
-
 declare module "express-session" {
   interface SessionData {
-    user?: {
-      id: string;
-      username: string;
-    };
+    user?: SessionUser;
   }
 }
 
 export function setupAuth(app: any) {
-  // Trust proxy for Vercel
-  app.set('trust proxy', 1);
-  
-  // Session configuration
+  app.set("trust proxy", 1);
+
   const sessionConfig: any = {
     secret: process.env.SESSION_SECRET || "vehicle-doc-manager-secret-key-change-in-production",
-    resave: true, // Changed to true for serverless
+    resave: true,
     saveUninitialized: false,
-    rolling: true, // Refresh cookie on each request
+    rolling: true,
     cookie: {
-      secure: true, // Always use secure in production
+      secure: process.env.NODE_ENV === "production",
       httpOnly: true,
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      sameSite: "lax", // Changed from "none" to "lax" for better compatibility
-      path: '/',
+      maxAge: 30 * 24 * 60 * 60 * 1000,
+      sameSite: "lax",
+      path: "/",
     },
   };
 
-  // Always try to use PostgreSQL session store if database is available
-  if (pool && process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('your-database-url')) {
+  if (pool && process.env.DATABASE_URL && !process.env.DATABASE_URL.includes("your-database-url")) {
     try {
       sessionConfig.store = new PgSession({
         pool: pool,
         tableName: "sessions",
         createTableIfMissing: true,
-        pruneSessionInterval: 60 * 15, // Prune every 15 minutes
+        pruneSessionInterval: 60 * 15,
         errorLog: (err) => {
           console.error("Session store error:", err);
         },
@@ -65,89 +54,94 @@ export function setupAuth(app: any) {
 }
 
 export function isAuthenticated(req: Request, res: Response, next: NextFunction) {
-  try {
-    console.log("=== Authentication Check ===");
-    console.log("Session exists:", !!req.session);
-    console.log("Session ID:", req.sessionID);
-    console.log("Session user:", req.session?.user);
-    console.log("Cookie:", req.headers.cookie);
-    
-    if (req.session && req.session.user) {
-      console.log("✓ Authenticated as:", req.session.user.id);
+  if (req.session?.user) {
+    return next();
+  }
+  return res.status(401).json({ message: "Unauthorized" });
+}
+
+export function requireAdmin(req: Request, res: Response, next: NextFunction) {
+  if (req.session?.user?.role === "admin") {
+    return next();
+  }
+  return res.status(403).json({ message: "Admin access required" });
+}
+
+export function requireSection(section: "vehicles" | "drivingLicenses") {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const user = req.session?.user;
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    if (user.role === "admin") {
       return next();
     }
-    
-    console.log("✗ Not authenticated - returning 401");
-    return res.status(401).json({ 
-      message: "Unauthorized",
-      debug: {
-        hasSession: !!req.session,
-        hasUser: !!req.session?.user,
-        sessionId: req.sessionID
-      }
-    });
+    if (section === "vehicles" && user.canAccessVehicles) {
+      return next();
+    }
+    if (section === "drivingLicenses" && user.canAccessDrivingLicenses) {
+      return next();
+    }
+    return res.status(403).json({ message: "You do not have access to this section" });
+  };
+}
+
+export function canAccessResource(sessionUser: SessionUser, resourceUserId: string): boolean {
+  return sessionUser.role === "admin" || sessionUser.id === resourceUserId;
+}
+
+export async function initAuth() {
+  try {
+    await userStorage.ensureAdminUser();
   } catch (error) {
-    console.error("Error in isAuthenticated middleware:", error);
-    return res.status(401).json({ message: "Unauthorized" });
+    console.error("Failed to seed admin user:", error);
   }
 }
 
 export function registerAuthRoutes(app: any) {
-  // Login endpoint
-  app.post("/api/auth/login", (req: Request, res: Response) => {
+  app.post("/api/auth/login", async (req: Request, res: Response) => {
     try {
       const { username, password } = req.body;
-      console.log("=== Login Attempt ===");
-      console.log("Username:", username);
 
-      if (username === DEFAULT_USER.username && password === DEFAULT_USER.password) {
-        // Ensure session exists before setting user
-        if (!req.session) {
-          console.log("✗ Session not initialized!");
-          return res.status(500).json({ message: "Session not initialized" });
-        }
-        
-        console.log("Session ID before save:", req.sessionID);
-        req.session.user = {
-          id: DEFAULT_USER.id,
-          username: DEFAULT_USER.username
-        };
-        
-        // Force session save
-        req.session.save((err) => {
-          if (err) {
-            console.error("Error saving session:", err);
-            return res.status(500).json({ message: "Failed to save session" });
-          }
-          
-          console.log("✓ Session saved successfully");
-          console.log("Session ID after save:", req.sessionID);
-          console.log("Session user:", req.session.user);
-          
-          return res.json({ 
-            user: {
-              id: DEFAULT_USER.id,
-              username: DEFAULT_USER.username
-            }
-          });
-        });
-        return;
+      if (!username || !password) {
+        return res.status(400).json({ message: "Username and password are required" });
       }
 
-      return res.status(401).json({ message: "Invalid username or password" });
+      const user = await userStorage.getUserByUsername(username);
+      if (!user || !user.passwordHash) {
+        return res.status(401).json({ message: "Invalid username or password" });
+      }
+
+      const valid = await userStorage.verifyPassword(password, user.passwordHash);
+      if (!valid) {
+        return res.status(401).json({ message: "Invalid username or password" });
+      }
+
+      if (!req.session) {
+        return res.status(500).json({ message: "Session not initialized" });
+      }
+
+      req.session.user = toSessionUser(user);
+
+      req.session.save((err) => {
+        if (err) {
+          console.error("Error saving session:", err);
+          return res.status(500).json({ message: "Failed to save session" });
+        }
+        return res.json({ user: req.session!.user });
+      });
     } catch (error) {
       console.error("Error in /api/auth/login:", error);
       return res.status(500).json({ message: "Login failed" });
     }
   });
 
-  // Logout endpoint
   app.post("/api/auth/logout", (req: Request, res: Response) => {
     try {
       if (!req.session) {
         return res.json({ message: "Already logged out" });
       }
-      
+
       req.session.destroy((err) => {
         if (err) {
           console.error("Error destroying session:", err);
@@ -162,11 +156,9 @@ export function registerAuthRoutes(app: any) {
     }
   });
 
-  // Get current user
   app.get("/api/auth/user", (req: Request, res: Response) => {
     try {
-      // Handle cases where session might not be initialized
-      if (req.session && req.session.user) {
+      if (req.session?.user) {
         return res.json({ user: req.session.user });
       }
       return res.status(401).json({ message: "Not authenticated" });
@@ -176,3 +168,5 @@ export function registerAuthRoutes(app: any) {
     }
   });
 }
+
+export type { SessionUser, UserRole };
