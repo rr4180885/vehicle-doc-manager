@@ -6,7 +6,7 @@ import { z } from "zod";
 import { setupAuth, registerAuthRoutes, isAuthenticated, requireAdmin, requireSection, canAccessResource, initAuth } from "./auth.js";
 import { userStorage } from "./userStorage.js";
 import { createVehicleWithDocumentsSchema, insertDrivingLicenseSchema } from "../shared/schema.js";
-import { createOperatorSchema, updateOperatorSchema, resetOperatorPasswordSchema } from "../shared/models/auth.js";
+import { createOperatorSchema, updateOperatorSchema, resetOperatorPasswordSchema, deleteOperatorSchema } from "../shared/models/auth.js";
 import { registerObjectStorageRoutes } from "./replit_integrations/object_storage/index.js";
 import { upload, getFileUrl, uploadToVercelBlob, isUsingVercelBlob } from "./upload.js";
 import { extractLearnerPdfData } from "./learnerPdfParser.js";
@@ -131,6 +131,31 @@ export async function registerRoutes(
         return res.status(404).json({ message: err.message });
       }
       if (err.message === "Can only reset password for operator users") {
+        return res.status(400).json({ message: err.message });
+      }
+      throw err;
+    }
+  });
+
+  app.delete("/api/users/:id", isAuthenticated, requireAdmin, async (req, res) => {
+    try {
+      const input = deleteOperatorSchema.parse(req.body);
+      await userStorage.deleteOperator(req.session.user!.id, String(req.params.id), input.adminPassword);
+      res.json({ message: "Operator deleted successfully" });
+    } catch (err: any) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({
+          message: err.errors[0].message,
+          field: err.errors[0].path.join("."),
+        });
+      }
+      if (err.message === "User not found") {
+        return res.status(404).json({ message: err.message });
+      }
+      if (err.message === "Admin password is incorrect") {
+        return res.status(401).json({ message: err.message });
+      }
+      if (err.message === "Can only delete operator users") {
         return res.status(400).json({ message: err.message });
       }
       throw err;

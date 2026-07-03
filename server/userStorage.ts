@@ -13,6 +13,7 @@ import {
   toSafeUser,
 } from "../shared/models/auth.js";
 import { db } from "./db.js";
+import { storage } from "./storage.js";
 
 const SALT_ROUNDS = 10;
 
@@ -169,6 +170,42 @@ export class UserStorage {
       username: user.username!,
       generatedPassword,
     };
+  }
+
+  async deleteOperator(adminId: string, operatorId: string, adminPassword: string): Promise<void> {
+    const database = this.checkDb();
+    const admin = await this.getUserById(adminId);
+    if (!admin || admin.role !== "admin") {
+      throw new Error("Admin access required");
+    }
+    if (!admin.passwordHash) {
+      throw new Error("Admin password not set");
+    }
+
+    const valid = await this.verifyPassword(adminPassword, admin.passwordHash);
+    if (!valid) {
+      throw new Error("Admin password is incorrect");
+    }
+
+    const operator = await this.getUserById(operatorId);
+    if (!operator) {
+      throw new Error("User not found");
+    }
+    if (operator.role !== "operator") {
+      throw new Error("Can only delete operator users");
+    }
+
+    const operatorVehicles = await storage.getVehicles(operatorId);
+    for (const vehicle of operatorVehicles) {
+      await storage.deleteVehicle(vehicle.id);
+    }
+
+    const operatorLicenses = await storage.getDrivingLicenses(operatorId);
+    for (const license of operatorLicenses) {
+      await storage.deleteDrivingLicense(license.id);
+    }
+
+    await database.delete(users).where(eq(users.id, operatorId));
   }
 
   async updateProfile(

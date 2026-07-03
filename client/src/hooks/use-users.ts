@@ -90,6 +90,30 @@ export function useUpdateOperator() {
   });
 }
 
+async function deleteOperator(userId: string, adminPassword: string): Promise<void> {
+  const response = await fetch(`/api/users/${userId}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ adminPassword }),
+    credentials: "include",
+  });
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.message || "Failed to delete operator");
+  }
+}
+
+export function useDeleteOperator() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ userId, adminPassword }: { userId: string; adminPassword: string }) =>
+      deleteOperator(userId, adminPassword),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/users"] });
+    },
+  });
+}
+
 export function useResetPassword() {
   const queryClient = useQueryClient();
   return useMutation({

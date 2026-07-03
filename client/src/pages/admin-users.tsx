@@ -4,6 +4,7 @@ import {
   useCreateOperator,
   useUpdateOperator,
   useResetPassword,
+  useDeleteOperator,
 } from "@/hooks/use-users";
 import { useAuth } from "@/hooks/use-auth";
 import { DashboardLayout } from "@/components/layout/dashboard-layout";
@@ -13,6 +14,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { LoadingScreen } from "@/components/ui/loading-spinner";
 import {
@@ -20,6 +30,7 @@ import {
   KeyRound,
   Users,
   Edit,
+  Trash2,
   Copy,
   Check,
   UploadCloud,
@@ -61,11 +72,13 @@ function PasswordField({
   value,
   onChange,
   placeholder,
+  minLength,
 }: {
   id: string;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  minLength?: number;
 }) {
   const [visible, setVisible] = useState(false);
 
@@ -77,7 +90,7 @@ function PasswordField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        minLength={6}
+        minLength={minLength}
         className="input-modern pr-10"
       />
       <Button
@@ -263,6 +276,7 @@ function OperatorFormFields({
             value={form.password}
             onChange={(password) => setForm((f) => ({ ...f, password }))}
             placeholder="Leave blank to auto-generate"
+            minLength={6}
           />
           <p className="text-xs text-muted-foreground">
             If left empty, a password will be generated and shown after creation.
@@ -324,6 +338,7 @@ export default function AdminUsers() {
   const { mutateAsync: createOperator, isPending: isCreating } = useCreateOperator();
   const { mutateAsync: updateOperator, isPending: isUpdating } = useUpdateOperator();
   const { mutateAsync: resetPassword, isPending: isResetting } = useResetPassword();
+  const { mutateAsync: deleteOperator, isPending: isDeleting } = useDeleteOperator();
   const { toast } = useToast();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -335,6 +350,8 @@ export default function AdminUsers() {
   const [credentials, setCredentials] = useState<{ userId: string; password: string; title: string } | null>(null);
   const [resetOperator, setResetOperator] = useState<SafeUser | null>(null);
   const [resetPasswordValue, setResetPasswordValue] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<SafeUser | null>(null);
+  const [adminPasswordForDelete, setAdminPasswordForDelete] = useState("");
 
   useEffect(() => {
     if (!authLoading && !isAdmin) {
@@ -469,6 +486,37 @@ export default function AdminUsers() {
     }
   };
 
+  const handleDeleteOperator = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!deleteTarget) return;
+    if (!adminPasswordForDelete.trim()) {
+      toast({
+        title: "Error",
+        description: "Enter your admin password to confirm deletion",
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      await deleteOperator({
+        userId: deleteTarget.id,
+        adminPassword: adminPasswordForDelete,
+      });
+      toast({
+        title: "Deleted",
+        description: `Operator ${deleteTarget.name || deleteTarget.username} removed`,
+      });
+      setDeleteTarget(null);
+      setAdminPasswordForDelete("");
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete operator",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (authLoading || isLoading) {
     return (
       <DashboardLayout>
@@ -597,6 +645,19 @@ export default function AdminUsers() {
                         <KeyRound className="w-4 h-4 sm:mr-1.5" />
                         <span className="hidden sm:inline">Reset</span>
                       </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-lg text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => {
+                          setDeleteTarget(op);
+                          setAdminPasswordForDelete("");
+                        }}
+                        title="Delete Operator"
+                      >
+                        <Trash2 className="w-4 h-4 sm:mr-1.5" />
+                        <span className="hidden sm:inline">Delete</span>
+                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -651,6 +712,7 @@ export default function AdminUsers() {
                 value={resetPasswordValue}
                 onChange={setResetPasswordValue}
                 placeholder="Leave blank to auto-generate"
+                minLength={6}
               />
               <p className="text-xs text-muted-foreground">
                 If left empty, a new password will be generated and shown after reset.
@@ -662,6 +724,54 @@ export default function AdminUsers() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteTarget(null);
+            setAdminPasswordForDelete("");
+          }
+        }}
+      >
+        <AlertDialogContent className="rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Delete operator — {deleteTarget?.name || deleteTarget?.username}?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently removes the operator account and all vehicle and driving license
+              records they created. Enter your admin password to confirm.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <form onSubmit={handleDeleteOperator} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="adminDeletePassword" className="text-sm font-medium">
+                Your admin password *
+              </Label>
+              <PasswordField
+                id="adminDeletePassword"
+                value={adminPasswordForDelete}
+                onChange={setAdminPasswordForDelete}
+                placeholder="Enter your admin password"
+              />
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel type="button" disabled={isDeleting}>
+                Cancel
+              </AlertDialogCancel>
+              <Button
+                type="submit"
+                variant="destructive"
+                className="rounded-xl"
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Deleting..." : "Delete Operator"}
+              </Button>
+            </AlertDialogFooter>
+          </form>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {credentials && (
         <CredentialsDialog

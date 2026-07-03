@@ -66,6 +66,10 @@ export const resetOperatorPasswordSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters").optional(),
 });
 
+export const deleteOperatorSchema = z.object({
+  adminPassword: z.string().min(1, "Admin password is required"),
+});
+
 export const updateOperatorSchema = z
   .object({
     name: z.string().min(1).optional(),
@@ -100,6 +104,7 @@ export type User = typeof users.$inferSelect;
 export type CreateOperatorRequest = z.infer<typeof createOperatorSchema>;
 export type UpdateOperatorRequest = z.infer<typeof updateOperatorSchema>;
 export type ResetOperatorPasswordRequest = z.infer<typeof resetOperatorPasswordSchema>;
+export type DeleteOperatorRequest = z.infer<typeof deleteOperatorSchema>;
 
 export type OperatorPermissions = {
   canAccessVehicles: boolean;
