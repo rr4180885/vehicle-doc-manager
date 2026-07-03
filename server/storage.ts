@@ -5,7 +5,6 @@ import {
   type VehicleWithDocuments, type CreateVehicleWithDocuments,
   type DrivingLicense, type InsertDrivingLicense, type UpdateDrivingLicenseRequest
 } from "../shared/schema.js";
-import type { UserRole } from "../shared/models/auth.js";
 import { db } from "./db.js";
 import { eq, ilike, and, desc, or } from "drizzle-orm";
 
@@ -26,7 +25,7 @@ export interface IStorage {
   getDocument(id: number): Promise<Document | undefined>;
 
   // Driving Licenses
-  getDrivingLicenses(userId: string, role: UserRole, search?: string): Promise<DrivingLicense[]>;
+  getDrivingLicenses(userId: string, search?: string): Promise<DrivingLicense[]>;
   getDrivingLicense(id: number): Promise<DrivingLicense | undefined>;
   createDrivingLicense(userId: string, data: InsertDrivingLicense): Promise<DrivingLicense>;
   updateDrivingLicense(id: number, updates: UpdateDrivingLicenseRequest): Promise<DrivingLicense>;
@@ -41,10 +40,10 @@ export class DatabaseStorage implements IStorage {
     return db;
   }
 
-  async getVehicles(userId: string, search?: string, role: UserRole = "operator"): Promise<VehicleWithDocuments[]> {
+  async getVehicles(userId: string, search?: string): Promise<VehicleWithDocuments[]> {
     const database = this.checkDb();
     
-    const conditions = role === "admin" ? [] : [eq(vehicles.userId, userId)];
+    const conditions = [eq(vehicles.userId, userId)];
     if (search) {
       conditions.push(ilike(vehicles.registrationNumber, `%${search}%`));
     }
@@ -203,9 +202,9 @@ export class DatabaseStorage implements IStorage {
     return doc;
   }
 
-  async getDrivingLicenses(userId: string, role: UserRole, search?: string): Promise<DrivingLicense[]> {
+  async getDrivingLicenses(userId: string, search?: string): Promise<DrivingLicense[]> {
     const database = this.checkDb();
-    const conditions = role === "admin" ? [] : [eq(drivingLicenses.userId, userId)];
+    const conditions = [eq(drivingLicenses.userId, userId)];
     if (search) {
       conditions.push(
         or(

@@ -162,7 +162,7 @@ export async function registerRoutes(
   app.get(api.vehicles.list.path, isAuthenticated, requireSection("vehicles"), async (req, res) => {
     const sessionUser = req.session.user!;
     const search = req.query.search as string | undefined;
-    const vehicles = await storage.getVehicles(sessionUser.id, search, sessionUser.role);
+    const vehicles = await storage.getVehicles(sessionUser.id, search);
     res.json(vehicles);
   });
 
@@ -361,7 +361,7 @@ export async function registerRoutes(
   app.get("/api/driving-licenses", isAuthenticated, requireSection("drivingLicenses"), async (req, res) => {
     const sessionUser = req.session.user!;
     const search = req.query.search as string | undefined;
-    const licenses = await storage.getDrivingLicenses(sessionUser.id, sessionUser.role, search);
+    const licenses = await storage.getDrivingLicenses(sessionUser.id, search);
     res.json(licenses);
   });
 

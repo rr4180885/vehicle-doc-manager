@@ -87,7 +87,7 @@ export function requireSection(section: "vehicles" | "drivingLicenses") {
 }
 
 export function canAccessResource(sessionUser: SessionUser, resourceUserId: string): boolean {
-  return sessionUser.role === "admin" || sessionUser.id === resourceUserId;
+  return sessionUser.id === resourceUserId;
 }
 
 export async function initAuth() {
