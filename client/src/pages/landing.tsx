@@ -60,11 +60,13 @@ export default function Landing() {
             </div>
 
             <div className="flex items-center justify-center lg:justify-start gap-4 mb-4">
-              <div className="flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30 overflow-hidden">
+              <div className="flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-2xl overflow-hidden shadow-lg shadow-primary/30 bg-white">
                 {shop?.shopLogoUrl ? (
-                  <img src={shop.shopLogoUrl} alt={shopName} className="h-full w-full object-cover" />
+                  <img src={shop.shopLogoUrl} alt={shopName} className="h-full w-full object-contain p-1.5" />
                 ) : (
-                  <Car className="h-7 w-7" strokeWidth={2.25} />
+                  <div className="h-full w-full bg-primary text-primary-foreground flex items-center justify-center">
+                    <Car className="h-7 w-7" strokeWidth={2.25} />
+                  </div>
                 )}
               </div>
             </div>

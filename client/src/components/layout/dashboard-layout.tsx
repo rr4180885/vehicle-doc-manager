@@ -75,15 +75,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </SheetContent>
           </Sheet>
 
-          <div className="flex items-center gap-2 lg:hidden min-w-0">
-            <div className="h-8 w-8 shrink-0 rounded-lg bg-primary flex items-center justify-center overflow-hidden">
+          <div className="flex items-center gap-2 lg:hidden min-w-0 flex-1">
+            <div className="h-9 w-9 shrink-0 rounded-lg bg-white flex items-center justify-center overflow-hidden">
               {shop?.shopLogoUrl ? (
-                <img src={shop.shopLogoUrl} alt={shopName} className="h-full w-full object-cover" />
+                <img src={shop.shopLogoUrl} alt={shopName} className="h-full w-full object-contain p-0.5" />
               ) : (
-                <Car className="h-4 w-4 text-primary-foreground" />
+                <div className="h-full w-full bg-primary flex items-center justify-center">
+                  <Car className="h-4 w-4 text-primary-foreground" />
+                </div>
               )}
             </div>
-            <span className="font-semibold text-sm truncate">{shopName}</span>
+            <span className="font-semibold text-sm line-clamp-2 leading-tight min-w-0">{shopName}</span>
           </div>
 
           <div className="ml-auto flex items-center gap-2.5">

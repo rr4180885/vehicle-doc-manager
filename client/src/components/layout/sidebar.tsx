@@ -38,10 +38,11 @@ export function SidebarContent({ onNavigate, className }: SidebarProps) {
 
   return (
     <div className={cn("flex h-full flex-col", className)}>
-      <div className="flex h-[72px] items-center px-5 border-b border-white/10">
+      <div className="flex min-h-[72px] items-center px-4 py-3 border-b border-white/10">
         <BrandLogo
-          size="sm"
+          size="md"
           variant="dark"
+          className="w-full"
           name={shop?.shopName}
           logoUrl={shop?.shopLogoUrl}
         />
