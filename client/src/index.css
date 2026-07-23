@@ -1,79 +1,89 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,400;0,500;0,600;0,700;1,400&family=Syne:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
-  --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
+  /* Maa Pollution Centre — forest teal palette */
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --font-display: 'Syne', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-sans: var(--font-body);
 
-  /* Professional slate + teal — pollution centre / vehicle compliance */
-  --background: 210 20% 98%;
-  --foreground: 215 25% 17%;
+  --background: 45 28% 96%;
+  --foreground: 162 45% 9%;
 
-  --card: 0 0% 100%;
-  --card-foreground: 215 25% 17%;
+  --card: 48 40% 99%;
+  --card-foreground: 162 45% 9%;
 
-  --popover: 0 0% 100%;
-  --popover-foreground: 215 25% 17%;
+  --popover: 48 40% 99%;
+  --popover-foreground: 162 45% 9%;
 
-  --primary: 166 76% 32%;
+  --primary: 175 84% 32%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 210 16% 93%;
-  --secondary-foreground: 215 25% 17%;
+  --secondary: 160 18% 91%;
+  --secondary-foreground: 162 40% 14%;
 
-  --muted: 210 16% 93%;
-  --muted-foreground: 215 14% 45%;
+  --muted: 160 16% 92%;
+  --muted-foreground: 162 10% 36%;
 
-  --accent: 166 40% 94%;
-  --accent-foreground: 166 76% 25%;
+  --accent: 38 92% 48%;
+  --accent-foreground: 162 45% 9%;
 
-  --destructive: 0 72% 51%;
+  --destructive: 0 72% 48%;
   --destructive-foreground: 0 0% 100%;
 
-  --success: 142 71% 36%;
+  --success: 160 70% 32%;
   --success-foreground: 0 0% 100%;
 
-  --warning: 38 92% 50%;
-  --warning-foreground: 0 0% 100%;
+  --warning: 38 92% 46%;
+  --warning-foreground: 162 45% 9%;
 
-  --border: 214 18% 88%;
-  --input: 214 18% 88%;
-  --ring: 166 76% 32%;
+  --border: 160 14% 84%;
+  --input: 160 14% 84%;
+  --ring: 175 84% 32%;
 
-  --sidebar: 215 28% 14%;
-  --sidebar-foreground: 210 20% 98%;
-  --sidebar-muted: 215 20% 22%;
-  --sidebar-accent: 166 76% 38%;
+  --sidebar: 162 50% 10%;
+  --sidebar-foreground: 160 20% 96%;
+  --sidebar-muted: 162 35% 16%;
+  --sidebar-accent: 162 32% 15%;
 
-  --brand: 166 76% 32%;
-  --brand-light: 166 50% 94%;
+  --brand: 175 84% 32%;
+  --brand-light: 160 50% 94%;
 
-  --radius: 0.75rem;
+  --radius: 0.625rem;
 }
 
 .dark {
-  --background: 215 28% 10%;
-  --foreground: 210 20% 98%;
-  --card: 215 25% 13%;
-  --card-foreground: 210 20% 98%;
-  --popover: 215 25% 13%;
-  --popover-foreground: 210 20% 98%;
-  --primary: 166 65% 40%;
+  --background: 162 38% 6%;
+  --foreground: 160 18% 95%;
+
+  --card: 162 30% 9%;
+  --card-foreground: 160 18% 95%;
+
+  --popover: 162 30% 9%;
+  --popover-foreground: 160 18% 95%;
+
+  --primary: 174 62% 46%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 215 20% 18%;
-  --secondary-foreground: 210 20% 98%;
-  --muted: 215 20% 18%;
-  --muted-foreground: 215 12% 65%;
-  --accent: 215 20% 18%;
-  --accent-foreground: 210 20% 98%;
-  --destructive: 0 62% 45%;
-  --destructive-foreground: 210 20% 98%;
-  --border: 215 20% 20%;
-  --input: 215 20% 20%;
-  --ring: 166 65% 40%;
+
+  --secondary: 162 22% 14%;
+  --secondary-foreground: 160 18% 95%;
+
+  --muted: 162 20% 12%;
+  --muted-foreground: 160 10% 68%;
+
+  --accent: 38 90% 55%;
+  --accent-foreground: 162 40% 8%;
+
+  --destructive: 0 68% 55%;
+  --destructive-foreground: 0 0% 100%;
+
+  --border: 162 18% 18%;
+  --input: 162 18% 18%;
+  --ring: 174 62% 46%;
 }
 
 @layer base {
@@ -204,5 +214,118 @@
 
   .scrollbar-thin::-webkit-scrollbar-thumb {
     @apply rounded-full bg-border;
+  }
+}
+
+/* —— Maa Pollution Centre auth landing —— */
+.auth-landing {
+  --auth-ink: hsl(var(--foreground));
+  --auth-forest: hsl(var(--sidebar));
+  --auth-volt: hsl(var(--primary));
+  --auth-mint: #5eead4;
+  --auth-amber: hsl(var(--accent));
+  --auth-sand: hsl(var(--background));
+  --auth-panel: hsl(var(--card));
+  font-family: var(--font-body);
+  color: hsl(var(--foreground));
+  background: hsl(var(--background));
+}
+
+.auth-landing .auth-brand {
+  font-family: "Syne", var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+}
+
+.auth-landing .auth-hero {
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 20%, rgba(94, 234, 212, 0.22), transparent 55%),
+    radial-gradient(ellipse 70% 50% at 90% 80%, rgba(245, 158, 11, 0.18), transparent 50%),
+    linear-gradient(155deg, #0c1f1a 0%, #134e3a 42%, #0f766e 100%);
+  animation: authGradientShift 14s ease-in-out infinite alternate;
+}
+
+@keyframes authGradientShift {
+  from { filter: hue-rotate(0deg) saturate(1); }
+  to { filter: hue-rotate(8deg) saturate(1.08); }
+}
+
+.auth-landing .auth-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 20%, transparent 75%);
+}
+
+.auth-landing .auth-rise {
+  animation: authRise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.auth-landing .auth-rise-delay {
+  animation: authRise 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
+}
+
+.auth-landing .auth-rise-delay-2 {
+  animation: authRise 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.22s both;
+}
+
+@keyframes authRise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.auth-landing .auth-bolt {
+  animation: authBolt 2.4s ease-in-out infinite;
+}
+
+@keyframes authBolt {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.06); }
+}
+
+.auth-landing .auth-wheel {
+  animation: authSpin 18s linear infinite;
+  transform-origin: center;
+}
+
+@keyframes authSpin {
+  to { transform: rotate(360deg); }
+}
+
+.auth-landing .auth-form-shell {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  color: hsl(var(--card-foreground));
+  box-shadow: 0 24px 48px -28px hsl(var(--foreground) / 0.18);
+}
+
+.auth-landing .auth-submit {
+  background: linear-gradient(135deg, hsl(175 70% 28%), hsl(var(--primary)) 55%, hsl(174 60% 42%));
+  color: hsl(var(--primary-foreground));
+  border: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  box-shadow: 0 10px 24px -12px hsl(var(--primary) / 0.55);
+}
+
+.auth-landing .auth-submit:hover:not(:disabled) {
+  filter: brightness(1.05);
+  transform: translateY(-1px);
+}
+
+.auth-landing .auth-submit:disabled {
+  opacity: 0.75;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-landing .auth-hero,
+  .auth-landing .auth-bolt,
+  .auth-landing .auth-wheel,
+  .auth-landing .auth-rise,
+  .auth-landing .auth-rise-delay,
+  .auth-landing .auth-rise-delay-2 {
+    animation: none !important;
+    filter: none !important;
   }
 }
